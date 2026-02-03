@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/shift_manage_service.dart';
 
@@ -15,18 +16,21 @@ class _MyShiftsPageState extends State<MyShiftsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final String aliceUid = "UP2zDBH4nEW809M05lmL";
+  late final String uid;
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
+
+      @override
+      void initState() {
+        super.initState();
+        _tabController = TabController(length: 3, vsync: this);
+        uid = FirebaseAuth.instance.currentUser!.uid;
+      }
+
 
   Stream<QuerySnapshot> _getShifts(String status) {
     return FirebaseFirestore.instance
         .collection('users')
-        .doc(aliceUid)
+        .doc(uid)
         .collection('bookedShifts')
         .where('status', isEqualTo: status)
         .snapshots();
@@ -91,7 +95,7 @@ class _MyShiftsPageState extends State<MyShiftsPage>
           ShiftList(
             stream: _getShifts('upcoming'),
             isManage: true,
-            userId: aliceUid,
+            userId: uid,
           ),
         ],
       ),

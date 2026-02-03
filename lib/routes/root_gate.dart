@@ -16,8 +16,6 @@ class _RootGateState extends State<RootGate> {
   @override
   void initState() {
     super.initState();
-    // TEMP smoke test (remove later if you want)
-    testFirestore();
   }
 
   @override

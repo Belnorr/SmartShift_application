@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smartshift_application2/screens/auth/login_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
-  // TEMP hardcoded Alice UID (logic-first)
-  static const String aliceUid = "UP2zDBH4nEW809M05lmL";
+  static String get uid =>
+      FirebaseAuth.instance.currentUser!.uid;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,7 @@ class ProfilePage extends StatelessWidget {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
-            .doc(aliceUid)
+            .doc(uid)
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -470,7 +471,7 @@ class _EditProfileSheet extends StatelessWidget {
   void _setPhoto(BuildContext context, String path) async {
     await FirebaseFirestore.instance
         .collection('users')
-        .doc(ProfilePage.aliceUid)
+        .doc(ProfilePage.uid)
         .update({'photoURL': path});
 
     Navigator.pop(context);
@@ -517,7 +518,7 @@ class _EditSkillsSheetState extends State<_EditSkillsSheet> {
     super.initState();
     FirebaseFirestore.instance
         .collection('users')
-        .doc(ProfilePage.aliceUid)
+        .doc(ProfilePage.uid)
         .get()
         .then((doc) {
       final skills = List<String>.from(doc['skills'] ?? []);
@@ -568,7 +569,7 @@ class _EditSkillsSheetState extends State<_EditSkillsSheet> {
               onPressed: () async {
                 await FirebaseFirestore.instance
                     .collection('users')
-                    .doc(ProfilePage.aliceUid)
+                    .doc(ProfilePage.uid)
                     .update({'skills': selected.toList()});
 
                 Navigator.pop(context);

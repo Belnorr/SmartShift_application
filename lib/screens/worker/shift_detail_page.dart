@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/shift_booking_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ShiftDetailPage extends StatelessWidget {
   final Map<String, dynamic> shift;
@@ -10,8 +11,8 @@ class ShiftDetailPage extends StatelessWidget {
     required this.shift,
   });
 
-  // TEMP hardcoded Alice UID
-  static const String aliceUid = "UP2zDBH4nEW809M05lmL";
+    static String get uid =>
+        FirebaseAuth.instance.currentUser!.uid;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +30,7 @@ class ShiftDetailPage extends StatelessWidget {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
-            .doc(aliceUid)
+            .doc(uid)
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -101,55 +102,101 @@ class HeaderCard extends StatelessWidget {
 
 /* ===================== ELIGIBILITY ===================== */
 
-class EligibilityCard extends StatelessWidget {
-  final Map<String, dynamic> shift;
-  final List<String> userSkills;
+      class EligibilityCard extends StatelessWidget {
+        final Map<String, dynamic> shift;
+        final List<String> userSkills;
 
-  const EligibilityCard({
-    required this.shift,
-    required this.userSkills,
-  });
+        const EligibilityCard({
+          super.key,
+          required this.shift,
+          required this.userSkills,
+        });
 
-  @override
-  Widget build(BuildContext context) {
-    final List<String> requiredSkills =
-        List<String>.from(shift['requiredSkills'] ?? []);
+        Future<bool> _checkScheduleConflict() async {
+          final uid = FirebaseAuth.instance.currentUser!.uid;
 
-    final bool skillMatch = requiredSkills.any(
-      (skill) => userSkills
-          .map((s) => s.toLowerCase().trim())
-          .contains(skill.toLowerCase().trim()),
-    );
+          final start = shift['date'].toDate();
+          final end = shift['endTime'].toDate();
 
-    const bool noConflict = true;
-    const bool accountActive = true;
+          final booked = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .collection('bookedShifts')
+              .where('status', isEqualTo: 'upcoming')
+              .get();
 
-    final bool eligible =
-        skillMatch && noConflict && accountActive;
+          for (final doc in booked.docs) {
+            final s = doc['date'].toDate();
+            final e = doc['endTime'].toDate();
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Eligibility check',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          CheckRow(text: 'Skill match', passed: skillMatch),
-          CheckRow(text: 'No schedule conflict', passed: noConflict),
-          CheckRow(text: 'Account active', passed: accountActive),
-          CheckRow(text: 'Eligible to book', passed: eligible),
-        ],
-      ),
-    );
-  }
-}
+            if (start.isBefore(e) && end.isAfter(s)) {
+              return false;
+            }
+          }
+
+          return true;
+        }
+
+        @override
+        Widget build(BuildContext context) {
+          final List<String> requiredSkills =
+              List<String>.from(shift['requiredSkills'] ?? []);
+
+          final bool skillMatch = requiredSkills.any(
+            (skill) => userSkills
+                .map((s) => s.toLowerCase().trim())
+                .contains(skill.toLowerCase().trim()),
+          );
+
+          return FutureBuilder<bool>(
+            future: _checkScheduleConflict(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              final bool noConflict = snapshot.data!;
+              const bool accountActive = true;
+
+              final bool eligible =
+                  skillMatch && noConflict && accountActive;
+
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: cardDecoration(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Eligibility check',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    CheckRow(
+                      text: skillMatch ? 'Skill match' : 'Skills do not match',
+                      passed: skillMatch,
+                    ),
+                    CheckRow(
+                      text: noConflict ? 'No schedule conflict' : 'Schedule conflict',
+                      passed: noConflict,
+                    ),
+
+                    CheckRow(text: 'Account active', passed: accountActive),
+                    CheckRow(text: 'Eligible to book', passed: eligible),
+                  ],
+                ),
+              );
+            },
+          );
+        }
+      }
+
 
 /* ===================== BOOKING ===================== */
 

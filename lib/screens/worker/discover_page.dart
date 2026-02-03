@@ -6,6 +6,7 @@ import '../widgets/discover/search_bar_widget.dart';
 import '../widgets/discover/shift_card.dart';
 import 'shift_detail_page.dart';
 import '../services/shift_booking_service.dart';
+import 'package:firebase_auth/firebase_auth.dart'; 
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
@@ -17,6 +18,7 @@ class DiscoverPage extends StatefulWidget {
 class _DiscoverPageState extends State<DiscoverPage> {
   String query = '';
   bool showSavedOnly = false;
+  final String? currentUid = FirebaseAuth.instance.currentUser?.uid;
 
   final Set<String> savedShifts = {};
   Set<String> selectedSkills = {};
@@ -240,13 +242,31 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                   ? Icons.bookmark
                                   : Icons.bookmark_border,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                savedShifts.contains(id)
-                                    ? savedShifts.remove(id)
-                                    : savedShifts.add(id);
+                          onPressed: () async {
+                            if (currentUid == null) return; // Handle unauthenticated state
+
+                            final isCurrentlySaved = savedShifts.contains(id);
+                            
+                            // 1. Optimistic UI update
+                            setState(() {
+                              isCurrentlySaved ? savedShifts.remove(id) : savedShifts.add(id);
+                            });
+
+                            // 2. Persistent Update in Firestore
+                            // Assuming you have a 'users' collection where you store saved shift IDs
+                            final userDoc = FirebaseFirestore.instance.collection('users').doc(currentUid);
+
+                            if (isCurrentlySaved) {
+                              await userDoc.update({
+                                'savedShifts': FieldValue.arrayRemove([id])
                               });
-                            },
+                            } else {
+                              await userDoc.update({
+                                'savedShifts': FieldValue.arrayUnion([id])
+                              },); // Note: use set with merge:true if the doc might not exist
+                            }
+                          }
+                            
                           ),
                         ),
                       ],
