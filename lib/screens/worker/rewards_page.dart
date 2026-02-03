@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../widgets/reward_redeem_dialog.dart';
 
 class RewardsPage extends StatelessWidget {
   const RewardsPage({super.key});
 
-  // TEMP hardcoded Alice UID
-  static const String aliceUid = "UP2zDBH4nEW809M05lmL";
+    static String get uid =>
+        FirebaseAuth.instance.currentUser!.uid;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,7 @@ class RewardsPage extends StatelessWidget {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
-            .doc(aliceUid)
+            .doc(uid)
             .snapshots(),
         builder: (context, userSnapshot) {
           if (!userSnapshot.hasData) {
@@ -187,7 +188,7 @@ class _RewardItem extends StatelessWidget {
 
     final userRef = FirebaseFirestore.instance
         .collection('users')
-        .doc(RewardsPage.aliceUid);
+        .doc(RewardsPage.uid);
 
     await FirebaseFirestore.instance.runTransaction((tx) async {
       final snap = await tx.get(userRef);
@@ -273,7 +274,7 @@ class _ActivityList extends StatelessWidget {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
-          .doc(RewardsPage.aliceUid)
+          .doc(RewardsPage.uid)
           .collection('bookedShifts')
           .orderBy('bookedAt', descending: true)
           .limit(5)

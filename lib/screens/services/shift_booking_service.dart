@@ -1,21 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ShiftBookingService {
-  // TEMPORARY hardcoded user (Alice)
-  static const String testUserId = 'UP2zDBH4nEW809M05lmL';
-
   static Future<void> applyForShift({
     required String shiftId,
     required Map<String, dynamic> shiftData,
   }) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
     final bookedRef = FirebaseFirestore.instance
         .collection('users')
-        .doc(testUserId)
+        .doc(uid)
         .collection('bookedShifts')
         .doc(shiftId);
 
     final existing = await bookedRef.get();
-
     if (existing.exists) {
       throw Exception('Shift already booked');
     }
