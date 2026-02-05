@@ -88,8 +88,12 @@ class _EmployerManageShiftsScreenState
   }
 
   void _openEdit(Shift shift) {
+  Future.microtask(() {
+    if (!mounted) return;
     context.push('/e/edit', extra: shift);
-  }
+  });
+}
+
 
   void _showCardMenu({
     required TapDownDetails details,

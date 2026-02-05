@@ -1,6 +1,7 @@
 // ignore_for_file: unused_element_parameter
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/gestures.dart';
 
 import '../../core/models/shift.dart';
 import '../../services/firestore_service.dart';
@@ -24,6 +25,17 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
 
   double urgency = 3;
 
+  final ScrollController _thumbCtrl = ScrollController();
+
+@override
+void dispose() {
+  _thumbCtrl.dispose();   // ✅ add this
+  title.dispose();
+  location.dispose();
+  super.dispose();
+}
+
+
   final List<String> allSkills = const [
     'Retail',
     'Barista',
@@ -36,83 +48,111 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
   final Set<String> skills = {'Retail', 'Cashier'};
 
   int points = 45;
+  int slotsTotal = 3;
+
   final List<String> presetThumbs = const [
     "assets/img/starbucks.jpg",
     "assets/img/muji.jpg",
     "assets/img/light_to_night.jpg",
+    "assets/img/bread_talk.jpg",
+    "assets/img/chateraise.jpg",
+    "assets/img/uniqlo.jpg",
+    "assets/img/yakun.jpg",
   ];
 
   String? selectedThumbPath;
   ImageProvider? get thumbnail =>
       selectedThumbPath == null ? null : AssetImage(selectedThumbPath!);
 
-  @override
-  void dispose() {
-    title.dispose();
-    location.dispose();
-    super.dispose();
-  }
 
   Future<void> _pickThumbnail() async {
-    final chosen = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (_) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Choose a thumbnail",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 12),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: presetThumbs.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                  ),
-                  itemBuilder: (context, i) {
-                    final path = presetThumbs[i];
-                    final isSelected = path == selectedThumbPath;
+  final chosen = await showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: false,
+    builder: (ctx) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Choose a thumbnail",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 12),
 
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () => Navigator.pop(context, path),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected
-                                ? context.ss.primary
-                                : const Color(0xFFE7E5EE),
-                            width: isSelected ? 2 : 1,
-                          ),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Image.asset(path, fit: BoxFit.cover),
-                      ),
-                    );
+              // ✅ Horizontal scroller area (gesture forced)
+              SizedBox(
+                height: 110,
+                child: Listener(
+                  // Optional: makes mouse wheel feel nicer on web/desktop
+                  onPointerSignal: (event) {
+                    if (event is PointerScrollEvent) {
+                      final next = (_thumbCtrl.offset + event.scrollDelta.dy)
+                          .clamp(0.0, _thumbCtrl.position.maxScrollExtent);
+                      _thumbCtrl.jumpTo(next);
+                    }
                   },
-                ),
-                const SizedBox(height: 10),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onHorizontalDragUpdate: (details) {
+                      // swipe right -> move list left, hence minus dx
+                      final next = (_thumbCtrl.offset - details.delta.dx)
+                          .clamp(0.0, _thumbCtrl.position.maxScrollExtent);
+                      _thumbCtrl.jumpTo(next);
+                    },
+                    child: ListView.separated(
+                      controller: _thumbCtrl,
+                      scrollDirection: Axis.horizontal,
 
-    if (!mounted) return;
-    if (chosen != null) setState(() => selectedThumbPath = chosen);
-  }
+                      // ✅ IMPORTANT: disable default drag so the sheet can't steal it
+                      physics: const NeverScrollableScrollPhysics(),
+
+                      itemCount: presetThumbs.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (_, i) {
+                        final path = presetThumbs[i];
+                        final isSelected = path == selectedThumbPath;
+
+                        return InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => Navigator.pop(ctx, path),
+                          child: Container(
+                            width: 110,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected
+                                    ? context.ss.primary
+                                    : const Color(0xFFE7E5EE),
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Image.asset(path, fit: BoxFit.cover),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+
+  if (!mounted) return;
+  if (chosen != null) setState(() => selectedThumbPath = chosen);
+}
+
 
   Future<void> _createShift() async {
     final t = title.text.trim();
@@ -135,7 +175,7 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
         urgency: urgency.toInt(),
         points: points,
         skills: skills.toList(),
-        slotsTotal: 3,
+        slotsTotal: slotsTotal,
         thumbnailPath: selectedThumbPath,
       );
 
@@ -374,6 +414,69 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
                   ),
                 );
               }).toList(),
+            ),
+
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Text(
+                  'People Needed',
+                  style: TextStyle(fontWeight: FontWeight.w900, color: ss.text),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFFE7E5EE)),
+                  ),
+                  child: Text(
+                    '$slotsTotal',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      color: ss.text,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                SizedBox(
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: () => setState(
+                        () => slotsTotal = (slotsTotal - 1).clamp(1, 50)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFE7E5EE)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      backgroundColor: Colors.white,
+                      foregroundColor: ss.text,
+                    ),
+                    child: const Text('- 1',
+                        style: TextStyle(fontWeight: FontWeight.w900)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: () => setState(
+                        () => slotsTotal = (slotsTotal + 1).clamp(1, 50)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFE7E5EE)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      backgroundColor: Colors.white,
+                      foregroundColor: ss.text,
+                    ),
+                    child: const Text('+ 1',
+                        style: TextStyle(fontWeight: FontWeight.w900)),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 16),

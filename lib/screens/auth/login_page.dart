@@ -25,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
 
   // remember me
-  List<SavedLogin> _saved = [];
+  List<SavedAccount> _saved = [];
   final FocusNode _emailFocus = FocusNode();
   final GlobalKey _autoKey = GlobalKey();
 
@@ -64,21 +64,21 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      // RootGate catches auth change
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (_rememberMe) {
+        await RememberMeStore.instance.upsertEmail(email);
+        await _loadSaved();
+      }
     } on FirebaseAuthException catch (e) {
       setState(() => _error = e.message ?? 'Login failed');
+    } catch (e) {
+      setState(() => _error = 'Login failed: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
-    }
-
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-
-    if (_rememberMe) {
-      await RememberMeStore.instance.save(email: email, password: password);
-      await _loadSaved();
     }
   }
 
@@ -204,25 +204,23 @@ class _LoginPageState extends State<LoginPage> {
                                   onRight: _goRegister,
                                 ),
                                 const SizedBox(height: 14),
-                                Autocomplete<SavedLogin>(
+                                RawAutocomplete<SavedAccount>(
+  textEditingController: _emailCtrl,
+  focusNode: _emailFocus,
   optionsBuilder: (TextEditingValue v) {
     final q = v.text.trim().toLowerCase();
-    if (q.isEmpty) return _saved;
+    if (q.isEmpty) return _saved; // show all
     return _saved.where((s) => s.email.toLowerCase().contains(q));
   },
   displayStringForOption: (s) => s.email,
-  onSelected: (s) async {
+  onSelected: (s) {
     _emailCtrl.text = s.email;
-    final pw = await RememberMeStore.instance.readPassword(s.email);
-    if (!mounted) return;
-    _passCtrl.text = pw ?? '';
+    _passCtrl.clear(); // don't autofill password
   },
   fieldViewBuilder: (context, textCtrl, focusNode, onFieldSubmitted) {
-    // keep your own controller so _login() still reads _emailCtrl
-    textCtrl.value = _emailCtrl.value;
-
     return _CapsuleField(
-      controller: _emailCtrl,
+      controller: textCtrl,        // ✅ IMPORTANT
+      focusNode: focusNode,        // ✅ IMPORTANT
       hint: "E-mail ID",
       icon: Icons.mail_outline,
       keyboardType: TextInputType.emailAddress,
@@ -244,7 +242,8 @@ class _LoginPageState extends State<LoginPage> {
               final opt = options.elementAt(i);
               return ListTile(
                 dense: true,
-                title: Text(opt.email, style: const TextStyle(fontWeight: FontWeight.w700)),
+                title: Text(opt.email,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
                 onTap: () => onSelected(opt),
               );
             },
@@ -419,6 +418,7 @@ class _SegTab extends StatelessWidget {
 
 class _CapsuleField extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode; // ✅ add
   final String hint;
   final IconData icon;
   final bool obscure;
@@ -427,6 +427,7 @@ class _CapsuleField extends StatelessWidget {
 
   const _CapsuleField({
     required this.controller,
+    this.focusNode, // ✅ add
     required this.hint,
     required this.icon,
     this.obscure = false,
@@ -450,6 +451,7 @@ class _CapsuleField extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
+              focusNode: focusNode, // ✅ add
               enabled: enabled,
               controller: controller,
               keyboardType: keyboardType,
@@ -470,6 +472,7 @@ class _CapsuleField extends StatelessWidget {
     );
   }
 }
+
 
 class _TinyCheck extends StatelessWidget {
   final bool value;

@@ -1,89 +1,98 @@
 import 'dart:convert';
-
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class SavedAccount {
+  final String email;
+  final int lastUsedAt; // epoch millis
+
+  const SavedAccount({
+    required this.email,
+    required this.lastUsedAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+        "email": email,
+        "lastUsedAt": lastUsedAt,
+      };
+
+  factory SavedAccount.fromJson(Map<String, dynamic> json) {
+    return SavedAccount(
+      email: (json["email"] ?? "").toString(),
+      lastUsedAt: (json["lastUsedAt"] is int)
+          ? json["lastUsedAt"] as int
+          : int.tryParse(json["lastUsedAt"]?.toString() ?? "") ?? 0,
+    );
+  }
+}
 
 class RememberMeStore {
   RememberMeStore._();
   static final RememberMeStore instance = RememberMeStore._();
 
-  static const _prefsKey = 'saved_logins_v1';
-  static const _securePrefix = 'saved_login_pw_'; // key: saved_login_pw_<email>
+  static const _kKey = "smartshift_saved_emails";
+  static const _maxSaved = 8;
 
-  final _secure = const FlutterSecureStorage();
-
-  Future<List<SavedLogin>> load() async {
+  Future<List<SavedAccount>> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_prefsKey);
-    if (raw == null || raw.isEmpty) return [];
+    final raw = prefs.getString(_kKey);
+    if (raw == null || raw.trim().isEmpty) return [];
 
-    final list = (jsonDecode(raw) as List)
-        .map((e) => SavedLogin.fromJson(e as Map<String, dynamic>))
-        .toList();
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
 
-    // sort most recent first
-    list.sort((a, b) => (b.lastUsed ?? 0).compareTo(a.lastUsed ?? 0));
-    return list;
+      final items = decoded
+          .whereType<Map>()
+          .map((m) => SavedAccount.fromJson(m.cast<String, dynamic>()))
+          .where((a) => a.email.trim().isNotEmpty)
+          .toList();
+
+      items.sort((a, b) => b.lastUsedAt.compareTo(a.lastUsedAt));
+      return items;
+    } catch (_) {
+      return [];
+    }
   }
 
-  Future<void> save({required String email, required String password}) async {
+  Future<void> upsertEmail(String email) async {
     final e = email.trim().toLowerCase();
     if (e.isEmpty) return;
 
     final prefs = await SharedPreferences.getInstance();
-    final current = await load();
+    final list = await load();
 
-    // upsert entry
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final idx = current.indexWhere((x) => x.email == e);
-    if (idx >= 0) {
-      current[idx] = current[idx].copyWith(lastUsed: now);
-    } else {
-      current.add(SavedLogin(email: e, lastUsed: now));
-    }
+    // remove existing
+    list.removeWhere((a) => a.email.trim().toLowerCase() == e);
 
-    await prefs.setString(_prefsKey, jsonEncode(current.map((x) => x.toJson()).toList()));
-    await _secure.write(key: '$_securePrefix$e', value: password);
+    // add to front
+    list.insert(
+      0,
+      SavedAccount(email: e, lastUsedAt: DateTime.now().millisecondsSinceEpoch),
+    );
+
+    // cap length
+    final capped = list.take(_maxSaved).toList();
+
+    await prefs.setString(
+      _kKey,
+      jsonEncode(capped.map((a) => a.toJson()).toList()),
+    );
   }
 
-  Future<String?> readPassword(String email) async {
-    final e = email.trim().toLowerCase();
-    if (e.isEmpty) return null;
-    return _secure.read(key: '$_securePrefix$e');
-  }
-
-  Future<void> remove(String email) async {
+  Future<void> removeEmail(String email) async {
     final e = email.trim().toLowerCase();
     final prefs = await SharedPreferences.getInstance();
-    final current = await load();
+    final list = await load();
+    list.removeWhere((a) => a.email.trim().toLowerCase() == e);
 
-    current.removeWhere((x) => x.email == e);
-
-    await prefs.setString(_prefsKey, jsonEncode(current.map((x) => x.toJson()).toList()));
-    await _secure.delete(key: '$_securePrefix$e');
-  }
-}
-
-class SavedLogin {
-  final String email;
-  final int? lastUsed;
-
-  SavedLogin({required this.email, this.lastUsed});
-
-  factory SavedLogin.fromJson(Map<String, dynamic> j) {
-    return SavedLogin(
-      email: (j['email'] ?? '') as String,
-      lastUsed: (j['lastUsed'] as num?)?.toInt(),
+    await prefs.setString(
+      _kKey,
+      jsonEncode(list.map((a) => a.toJson()).toList()),
     );
-    }
+  }
 
-  Map<String, dynamic> toJson() => {
-    'email': email,
-    'lastUsed': lastUsed,
-  };
-
-  SavedLogin copyWith({int? lastUsed}) => SavedLogin(
-    email: email,
-    lastUsed: lastUsed ?? this.lastUsed,
-  );
+  Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kKey);
+  }
 }

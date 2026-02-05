@@ -502,7 +502,7 @@ class _BookingCard extends StatelessWidget {
       case 1:
         return const Color(0xFF22C55E);
       case 2:
-        return const Color(0xFFEAB308);
+        return const Color(0xFF3B82F6);
       case 3:
         return const Color(0xFFF97316);
       case 4:

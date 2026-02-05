@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-
+import 'package:flutter/material.dart';
 import '../screens/role_gate.dart';
 import '../core/models/shift.dart';
 
@@ -40,11 +40,18 @@ final GoRouter appRouter = GoRouter(
 
     // ✅ Employer edit screen (outside shell so no bottom nav)
     GoRoute(
-      path: '/e/edit',
-      builder: (context, state) {
-        final shift = state.extra as Shift;
-        return EmployerEditShiftScreen(shift: shift);
-      },
-    ),
+  path: '/e/edit',
+  builder: (context, state) {
+    final extra = state.extra;
+    if (extra is! Shift) {
+      return const Scaffold(
+        body: Center(child: Text("No shift data passed")),
+      );
+    }
+    return EmployerEditShiftScreen(shift: extra);
+  },
+),
+
+
   ],
 );

@@ -78,11 +78,9 @@ class _RegisterPageState extends State<RegisterPage> {
         'savedShifts': [],
       });
       if (_rememberMe) {
-        await RememberMeStore.instance.save(
-          email: email,
-          password: password,
-        );
-      }
+  await RememberMeStore.instance.upsertEmail(email);
+}
+
 
       debugPrint("FIRESTORE OK wrote users/${cred.user!.uid}");
 

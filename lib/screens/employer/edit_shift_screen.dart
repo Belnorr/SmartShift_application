@@ -8,12 +8,83 @@ class EmployerEditShiftScreen extends StatefulWidget {
   const EmployerEditShiftScreen({super.key, required this.shift});
 
   @override
-  State<EmployerEditShiftScreen> createState() => _EmployerEditShiftScreenState();
+  State<EmployerEditShiftScreen> createState() =>
+      _EmployerEditShiftScreenState();
 }
 
 class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
-  late final TextEditingController title;
-  late final TextEditingController location;
+  // Controllers (match screenshot fields)
+  late final TextEditingController roleCtrl; // "Role"
+  late final TextEditingController locationCtrl; // "Location"
+  late final TextEditingController storeCtrl; // "Store / Event Name"
+
+  final List<String> presetThumbs = const [
+    "assets/img/starbucks.jpg",
+    "assets/img/muji.jpg",
+    "assets/img/light_to_night.jpg",
+  ];
+
+  ImageProvider? get thumbnail =>
+      selectedThumbPath == null ? null : AssetImage(selectedThumbPath!);
+
+  Future<void> _pickThumbnail() async {
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Choose a thumbnail",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+  height: 110, // controls thumbnail size + sheet height
+  child: ListView.separated(
+    scrollDirection: Axis.horizontal,
+    itemCount: presetThumbs.length,
+    separatorBuilder: (_, __) => const SizedBox(width: 10),
+    itemBuilder: (context, i) {
+      final path = presetThumbs[i];
+      final isSelected = path == selectedThumbPath;
+
+      return InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.pop(context, path),
+        child: Container(
+          width: 110,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? context.ss.primary : const Color(0xFFE7E5EE),
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Image.asset(path, fit: BoxFit.cover),
+        ),
+      );
+    },
+  ),
+),
+
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+    if (chosen != null) setState(() => selectedThumbPath = chosen);
+  }
 
   late DateTime selectedDate;
   late TimeOfDay start;
@@ -21,59 +92,192 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
 
   late double urgency;
   late int points;
+  late int slotsTotal;
 
   late Set<String> skills;
   String? selectedThumbPath;
 
   final List<String> allSkills = const [
-    'Retail', 'Barista', 'Cashier', 'Packing', 'Customer Service', 'Events', 'Usher',
+    'Retail',
+    'Barista',
+    'Cashier',
+    'Packing',
+    'Customer Service',
+    'Events',
+    'Usher',
   ];
+
+  // time options (30-min steps)
+  late final List<TimeOfDay> timeOptions;
 
   @override
   void initState() {
     super.initState();
+
     final s = widget.shift;
 
-    title = TextEditingController(text: s.title);
-    location = TextEditingController(text: s.location);
+    // build dropdown options first
+    timeOptions = _buildTimeOptions(stepMinutes: 30);
+
+    roleCtrl = TextEditingController(text: s.title);
+    locationCtrl = TextEditingController(text: s.location);
+    storeCtrl = TextEditingController(
+        text: s.shiftCode); // or whatever you want to show here
 
     selectedDate = s.date;
-    start = s.start;
-    end = s.end;
+
+    // ✅ snap to dropdown values so DropdownButton doesn't crash
+    start = _snapToOptions(s.start, timeOptions);
+    end = _snapToOptions(s.end, timeOptions);
 
     urgency = (s.urgency).toDouble();
     points = s.points;
+    slotsTotal = (s.slotsTotal ?? 1).clamp(1, 50);
 
     skills = s.skills.toSet();
     selectedThumbPath = s.thumbnailPath;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      FocusManager.instance.primaryFocus?.unfocus();
+    });
   }
 
   @override
   void dispose() {
-    title.dispose();
-    location.dispose();
+    roleCtrl.dispose();
+    locationCtrl.dispose();
+    storeCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _save() async {
-    final t = title.text.trim();
-    final loc = location.text.trim();
+  List<TimeOfDay> _buildTimeOptions({required int stepMinutes}) {
+    final out = <TimeOfDay>[];
+    for (int h = 0; h < 24; h++) {
+      for (int m = 0; m < 60; m += stepMinutes) {
+        out.add(TimeOfDay(hour: h, minute: m));
+      }
+    }
+    return out;
+  }
 
-    if (t.isEmpty || loc.isEmpty) {
+  TimeOfDay _snapToOptions(TimeOfDay t, List<TimeOfDay> options) {
+    int minutes(TimeOfDay x) => x.hour * 60 + x.minute;
+    final target = minutes(t);
+
+    TimeOfDay best = options.first;
+    int bestDiff = (minutes(best) - target).abs();
+
+    for (final o in options) {
+      final d = (minutes(o) - target).abs();
+      if (d < bestDiff) {
+        best = o;
+        bestDiff = d;
+      }
+    }
+    return best;
+  }
+
+  String _fmtTime(TimeOfDay t) {
+    final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+    final mm = t.minute.toString().padLeft(2, '0');
+    final suffix = t.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$h:$mm $suffix';
+  }
+
+  Future<void> _pickMoreSkills() async {
+    final temp = Set<String>.from(skills);
+
+    await showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Add skills",
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: allSkills.map((s) {
+                  final selected = temp.contains(s);
+                  return FilterChip(
+                    selected: selected,
+                    label: Text(s),
+                    onSelected: (v) {
+                      if (v) {
+                        temp.add(s);
+                      } else {
+                        temp.remove(s);
+                      }
+                      // force rebuild bottom sheet
+                      (ctx as Element).markNeedsBuild();
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    setState(() => skills = temp);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    "Done",
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _save() async {
+    final role = roleCtrl.text.trim();
+    final loc = locationCtrl.text.trim();
+    final store = storeCtrl.text.trim();
+
+    if (role.isEmpty || loc.isEmpty || store.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill title + location")),
+        const SnackBar(
+            content: Text("Please fill Role, Location and Store/Event.")),
       );
       return;
     }
 
+    // Map back:
+    // shift.title = Role
+    // shift.employer = Store/Event
     final updated = widget.shift.copyWith(
-      title: t,
+      title: role,
       location: loc,
       date: selectedDate,
       start: start,
       end: end,
       urgency: urgency.toInt(),
       points: points,
+      slotsTotal: slotsTotal,
       skills: skills.toList(),
       thumbnailPath: selectedThumbPath,
     );
@@ -100,65 +304,419 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
     return Scaffold(
       backgroundColor: ss.surface,
       appBar: AppBar(
-        title: Text("Edit ${widget.shift.id}"),
+        title: const Text("Edit Shift"),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: ss.text,
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: const Text("Save", style: TextStyle(fontWeight: FontWeight.w900)),
-          )
-        ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-        children: [
-          _CapsuleField(label: "Shift Title", controller: title, icon: Icons.work_outline),
-          const SizedBox(height: 10),
-          _CapsuleField(label: "Location", controller: location, icon: Icons.location_on_outlined),
-          const SizedBox(height: 16),
-        ],
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+          child: SizedBox(
+            height: 54,
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _save,
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: const Text(
+                "Apply Changes",
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          children: [
+            // Change Thumbnail pill
+            _PillButton(
+              label: selectedThumbPath == null
+                  ? "Change Thumbnail"
+                  : "Thumbnail selected",
+              icon: Icons.upload_rounded,
+              onTap: _pickThumbnail,
+            ),
+
+            const SizedBox(height: 10),
+
+            _Card(
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE7E5EE)),
+                      image: thumbnail == null
+                          ? null
+                          : DecorationImage(
+                              image: thumbnail!, fit: BoxFit.cover),
+                    ),
+                    child: thumbnail == null
+                        ? const Icon(Icons.photo_outlined,
+                            color: Color(0xFF94A3B8))
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      thumbnail == null
+                          ? "No thumbnail selected"
+                          : "Thumbnail selected",
+                      style: TextStyle(
+                        color: context.ss.muted,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  if (thumbnail != null)
+                    TextButton(
+                      onPressed: () => setState(() => selectedThumbPath = null),
+                      child: const Text("Clear",
+                          style: TextStyle(fontWeight: FontWeight.w900)),
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            _LabeledField(label: "Role", controller: roleCtrl),
+            const SizedBox(height: 10),
+            _LabeledField(label: "Location", controller: locationCtrl),
+            const SizedBox(height: 10),
+            _LabeledField(label: "Store / Event Name", controller: storeCtrl),
+
+            const SizedBox(height: 18),
+
+            const Text(
+              "Pick Date",
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            _Card(
+              child: CalendarDatePicker(
+                initialDate: selectedDate,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2035),
+                onDateChanged: (d) => setState(() => selectedDate = d),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            const Text(
+              "Shift Timing",
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            _Card(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _TimeDropdown(
+                      value: start,
+                      options: timeOptions,
+                      label: "Start",
+                      fmt: _fmtTime,
+                      onChanged: (v) {
+                        if (v == null) return;
+                        setState(() => start = v);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _TimeDropdown(
+                      value: end,
+                      options: timeOptions,
+                      label: "End",
+                      fmt: _fmtTime,
+                      onChanged: (v) {
+                        if (v == null) return;
+                        setState(() => end = v);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            const Text(
+              "Required Skills",
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            _Card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: allSkills.map((s) {
+                      final selected = skills.contains(s);
+                      return FilterChip(
+                        selected: selected,
+                        label: Text(s),
+                        onSelected: (v) {
+                          setState(() {
+                            if (v) {
+                              skills.add(s);
+                            } else {
+                              skills.remove(s);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    onPressed: _pickMoreSkills,
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text(
+                      "Add more",
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            const Text(
+              "People Needed",
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            _Card(
+              child: Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE6E8EE)),
+                    ),
+                    child: Text(
+                      '$slotsTotal',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w900, fontSize: 14),
+                    ),
+                  ),
+                  const Spacer(),
+                  OutlinedButton(
+                    onPressed: () => setState(
+                        () => slotsTotal = (slotsTotal - 1).clamp(1, 50)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFE6E8EE)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('- 1',
+                        style: TextStyle(fontWeight: FontWeight.w900)),
+                  ),
+                  const SizedBox(width: 10),
+                  OutlinedButton(
+                    onPressed: () => setState(
+                        () => slotsTotal = (slotsTotal + 1).clamp(1, 50)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFE6E8EE)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('+ 1',
+                        style: TextStyle(fontWeight: FontWeight.w900)),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            const Text(
+              "Urgency:",
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            _Card(
+              child: Slider(
+                value: urgency.clamp(0, 5),
+                min: 0,
+                max: 5,
+                divisions: 5,
+                label: urgency.toInt().toString(),
+                onChanged: (v) => setState(() => urgency = v),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _CapsuleField extends StatelessWidget {
+/// ---------- UI helpers ----------
+
+class _Card extends StatelessWidget {
+  final Widget child;
+  const _Card({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE6E8EE)),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _PillButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _PillButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ss = context.ss;
+
+    return SizedBox(
+      height: 44,
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 18),
+        label: Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: ss.text,
+          side: const BorderSide(color: Color(0xFFE6E8EE)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LabeledField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final IconData icon;
 
-  const _CapsuleField({
+  const _LabeledField({
     required this.label,
     required this.controller,
-    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ss = context.ss;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 12,
+            color: ss.muted,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE6E8EE)),
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: TextField(
+              controller: controller,
+              autofocus: false,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TimeDropdown extends StatelessWidget {
+  final String label;
+  final TimeOfDay value;
+  final List<TimeOfDay> options;
+  final String Function(TimeOfDay) fmt;
+  final ValueChanged<TimeOfDay?> onChanged;
+
+  const _TimeDropdown({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.fmt,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE7E5EE)),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE6E8EE)),
       ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: const Color(0xFF9CA3AF)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: label,
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ],
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<TimeOfDay>(
+          value: value,
+          isExpanded: true,
+          onChanged: onChanged,
+          items: options.map((t) {
+            return DropdownMenuItem(
+              value: t,
+              child: Text(fmt(t),
+                  style: const TextStyle(fontWeight: FontWeight.w800)),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
