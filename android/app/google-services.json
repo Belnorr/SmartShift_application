@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "57974269225",
+    "project_id": "smartshift-49870",
+    "storage_bucket": "smartshift-49870.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:57974269225:android:042c1ba60f86232b940338",
+        "android_client_info": {
+          "package_name": "com.example.smartshift_application"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "57974269225-3amgrtkh1piu9u028fn7jr0fbk39n6r4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnKJzpBux9jlk1CG14vCf4dc1uz3ObexQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "57974269225-3amgrtkh1piu9u028fn7jr0fbk39n6r4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

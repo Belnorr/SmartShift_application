@@ -1,0 +1,51 @@
+name: smart_shift
+description: A workforce management application
+publish_to: "none"
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_secure_storage: ^9.2.2
+
+  # Firebase
+  firebase_core: ^4.4.0
+  firebase_auth: ^6.1.4
+  cloud_firestore: ^6.1.2
+
+  # Google Sign In
+  google_sign_in: ^7.2.0
+
+  # Routing
+  go_router: ^17.0.1
+
+  # Local Storage
+  shared_preferences: ^2.2.3
+
+  # UI
+  cupertino_icons: ^1.0.2
+  table_calendar: ^3.1.3
+  fl_chart: ^1.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/img/auth_bg.png
+    - assets/img/starbucks.jpg
+    - assets/img/muji.jpg
+    - assets/img/light_to_night.jpg
+    - assets/img/bread_talk.jpg
+    - assets/img/chateraise.jpg
+    - assets/img/uniqlo.jpg
+    - assets/img/yakun.jpg
+
