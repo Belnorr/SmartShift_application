@@ -31,19 +31,16 @@ class SmartShiftApp extends StatelessWidget {
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         routerConfig: appRouter,
-
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
             seedColor: const Color.fromARGB(255, 8, 45, 75),
           ),
-
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(
               foregroundColor: const Color.fromARGB(255, 64, 132, 187),
             ),
           ),
-
           checkboxTheme: CheckboxThemeData(
             fillColor: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {
@@ -57,7 +54,6 @@ class SmartShiftApp extends StatelessWidget {
               width: 1.5,
             ),
           ),
-
           switchTheme: SwitchThemeData(
             trackColor: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {

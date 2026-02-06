@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SavedAccount {
   final String email;
-  final int lastUsedAt; // epoch millis
+  final int lastUsedAt;
 
   const SavedAccount({
     required this.email,
@@ -61,16 +61,13 @@ class RememberMeStore {
     final prefs = await SharedPreferences.getInstance();
     final list = await load();
 
-    // remove existing
     list.removeWhere((a) => a.email.trim().toLowerCase() == e);
 
-    // add to front
     list.insert(
       0,
       SavedAccount(email: e, lastUsedAt: DateTime.now().millisecondsSinceEpoch),
     );
 
-    // cap length
     final capped = list.take(_maxSaved).toList();
 
     await prefs.setString(

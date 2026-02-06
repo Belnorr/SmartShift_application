@@ -64,7 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '57974269225',
     projectId: 'smartshift-49870',
     storageBucket: 'smartshift-49870.firebasestorage.app',
-    iosClientId: '57974269225-veddvq7jt4a5oeufelhp5cqf6cb6nkq6.apps.googleusercontent.com',
+    iosClientId:
+        '57974269225-veddvq7jt4a5oeufelhp5cqf6cb6nkq6.apps.googleusercontent.com',
     iosBundleId: 'com.example.smartshiftApplication',
   );
 
@@ -74,7 +75,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '57974269225',
     projectId: 'smartshift-49870',
     storageBucket: 'smartshift-49870.firebasestorage.app',
-    iosClientId: '57974269225-veddvq7jt4a5oeufelhp5cqf6cb6nkq6.apps.googleusercontent.com',
+    iosClientId:
+        '57974269225-veddvq7jt4a5oeufelhp5cqf6cb6nkq6.apps.googleusercontent.com',
     iosBundleId: 'com.example.smartshiftApplication',
   );
 
@@ -87,5 +89,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'smartshift-49870.firebasestorage.app',
     measurementId: 'G-NW2FRSHKZY',
   );
-
 }

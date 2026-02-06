@@ -10,16 +10,14 @@ import '../screens/employer/manage_shifts_screen.dart';
 import '../screens/employer/edit_shift_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  // ✅ start at "/" so RoleGate decides where to go
   initialLocation: '/',
   routes: [
-    // ✅ RoleGate is the entry point (login -> role -> correct screens)
     GoRoute(
       path: '/',
       builder: (context, state) => const RoleGate(),
     ),
 
-    // ✅ Employer area (bottom nav shell)
+    // Employer shell (bottom nav shell)
     ShellRoute(
       builder: (context, state, child) => EmployerShell(child: child),
       routes: [
@@ -38,20 +36,18 @@ final GoRouter appRouter = GoRouter(
       ],
     ),
 
-    // ✅ Employer edit screen (outside shell so no bottom nav)
+    // Employer edit screen
     GoRoute(
-  path: '/e/edit',
-  builder: (context, state) {
-    final extra = state.extra;
-    if (extra is! Shift) {
-      return const Scaffold(
-        body: Center(child: Text("No shift data passed")),
-      );
-    }
-    return EmployerEditShiftScreen(shift: extra);
-  },
-),
-
-
+      path: '/e/edit',
+      builder: (context, state) {
+        final extra = state.extra;
+        if (extra is! Shift) {
+          return const Scaffold(
+            body: Center(child: Text("No shift data passed")),
+          );
+        }
+        return EmployerEditShiftScreen(shift: extra);
+      },
+    ),
   ],
 );

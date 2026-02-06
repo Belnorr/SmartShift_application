@@ -19,12 +19,10 @@ class RoleGate extends StatelessWidget {
 
         final user = authSnap.data;
 
-        // NOT LOGGED IN → LOGIN PAGE
         if (user == null) {
           return const LoginPage();
         }
 
-        // LOGGED IN → CHECK ROLE
         return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           future: FirebaseFirestore.instance
               .collection('users')
@@ -42,7 +40,7 @@ class RoleGate extends StatelessWidget {
               if (role == 'employer') {
                 context.go('/e/dashboard');
               } else {
-                context.go('/w/home'); // change later if needed
+                context.go('/w/home');
               }
             });
 

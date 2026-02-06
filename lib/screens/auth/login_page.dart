@@ -27,7 +27,6 @@ class _LoginPageState extends State<LoginPage> {
   // remember me
   List<SavedAccount> _saved = [];
   final FocusNode _emailFocus = FocusNode();
-  final GlobalKey _autoKey = GlobalKey();
 
   @override
   void initState() {
@@ -116,24 +115,21 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     const bgPath = "assets/img/auth_bg.png";
-    final h = MediaQuery.of(context).size.height;
 
-    // ✅ This is the “make it same height as register” knob:
-    // Set this to the SAME value you use in RegisterPage.
+
     const sheetRadius = 28.0;
-    final sheetMinHeight = h * 0.62; // adjust to match register EXACTLY
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F4F6),
       body: Stack(
         children: [
-          // BG
+          // background
           Positioned.fill(
             child: Image.asset(bgPath, fit: BoxFit.cover),
           ),
-          // Dark overlay
+          // dark tint
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.45)),
+            child: Container(color: Colors.black.withValues(alpha:0.45)),
           ),
 
           SafeArea(
@@ -168,8 +164,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                // ✅ No Spacer. We want the sheet to rise like the register screen.
-                // This small gap matches the screenshot.
                 const SizedBox(height: 14),
 
                 // Bottom sheet
@@ -177,7 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: FractionallySizedBox(
-                      heightFactor: 0.62, // 👈 adjust: 0.58–0.68
+                      heightFactor: 0.62,
                       widthFactor: 1,
                       child: Container(
                         width: double.infinity,
@@ -205,55 +199,63 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 const SizedBox(height: 14),
                                 RawAutocomplete<SavedAccount>(
-  textEditingController: _emailCtrl,
-  focusNode: _emailFocus,
-  optionsBuilder: (TextEditingValue v) {
-    final q = v.text.trim().toLowerCase();
-    if (q.isEmpty) return _saved; // show all
-    return _saved.where((s) => s.email.toLowerCase().contains(q));
-  },
-  displayStringForOption: (s) => s.email,
-  onSelected: (s) {
-    _emailCtrl.text = s.email;
-    _passCtrl.clear(); // don't autofill password
-  },
-  fieldViewBuilder: (context, textCtrl, focusNode, onFieldSubmitted) {
-    return _CapsuleField(
-      controller: textCtrl,        // ✅ IMPORTANT
-      focusNode: focusNode,        // ✅ IMPORTANT
-      hint: "E-mail ID",
-      icon: Icons.mail_outline,
-      keyboardType: TextInputType.emailAddress,
-      enabled: !_loading,
-    );
-  },
-  optionsViewBuilder: (context, onSelected, options) {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: Material(
-        elevation: 6,
-        borderRadius: BorderRadius.circular(14),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 220, maxWidth: 520),
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: options.length,
-            itemBuilder: (_, i) {
-              final opt = options.elementAt(i);
-              return ListTile(
-                dense: true,
-                title: Text(opt.email,
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
-                onTap: () => onSelected(opt),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  },
-),
-
+                                  textEditingController: _emailCtrl,
+                                  focusNode: _emailFocus,
+                                  optionsBuilder: (TextEditingValue v) {
+                                    final q = v.text.trim().toLowerCase();
+                                    if (q.isEmpty)
+                                      return _saved; // show all saved
+                                    return _saved.where((s) =>
+                                        s.email.toLowerCase().contains(q));
+                                  },
+                                  displayStringForOption: (s) => s.email,
+                                  onSelected: (s) {
+                                    _emailCtrl.text = s.email;
+                                    _passCtrl
+                                        .clear(); // don't autofill password
+                                  },
+                                  fieldViewBuilder: (context, textCtrl,
+                                      focusNode, onFieldSubmitted) {
+                                    return _CapsuleField(
+                                      controller: textCtrl,
+                                      focusNode: focusNode,
+                                      hint: "E-mail ID",
+                                      icon: Icons.mail_outline,
+                                      keyboardType: TextInputType.emailAddress,
+                                      enabled: !_loading,
+                                    );
+                                  },
+                                  optionsViewBuilder:
+                                      (context, onSelected, options) {
+                                    return Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Material(
+                                        elevation: 6,
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                              maxHeight: 220, maxWidth: 520),
+                                          child: ListView.builder(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 8),
+                                            itemCount: options.length,
+                                            itemBuilder: (_, i) {
+                                              final opt = options.elementAt(i);
+                                              return ListTile(
+                                                dense: true,
+                                                title: Text(opt.email,
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w700)),
+                                                onTap: () => onSelected(opt),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                                 const SizedBox(height: 12),
                                 _CapsuleField(
                                   controller: _passCtrl,
@@ -418,7 +420,7 @@ class _SegTab extends StatelessWidget {
 
 class _CapsuleField extends StatelessWidget {
   final TextEditingController controller;
-  final FocusNode? focusNode; // ✅ add
+  final FocusNode? focusNode;
   final String hint;
   final IconData icon;
   final bool obscure;
@@ -427,7 +429,7 @@ class _CapsuleField extends StatelessWidget {
 
   const _CapsuleField({
     required this.controller,
-    this.focusNode, // ✅ add
+    this.focusNode,
     required this.hint,
     required this.icon,
     this.obscure = false,
@@ -451,7 +453,7 @@ class _CapsuleField extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
-              focusNode: focusNode, // ✅ add
+              focusNode: focusNode,
               enabled: enabled,
               controller: controller,
               keyboardType: keyboardType,
@@ -472,7 +474,6 @@ class _CapsuleField extends StatelessWidget {
     );
   }
 }
-
 
 class _TinyCheck extends StatelessWidget {
   final bool value;

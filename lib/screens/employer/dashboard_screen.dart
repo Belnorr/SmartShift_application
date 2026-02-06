@@ -78,23 +78,22 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
         elevation: 0,
         foregroundColor: ss.text,
         actions: [
-  IconButton(
-    tooltip: "Sign Out",
-    icon: const Icon(Icons.logout_rounded, size: 20),
-    onPressed: () async {
-      await FirebaseAuth.instance.signOut();
-      if (context.mounted) {
-        context.go('/'); // <- IMPORTANT
-      }
-    },
-  ),
-  const SizedBox(width: 8),
-],
-
+          IconButton(
+            tooltip: "Sign Out",
+            icon: const Icon(Icons.logout_rounded, size: 20),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              if (context.mounted) {
+                context.go('/');
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: StreamBuilder<List<Shift>>(
         stream: db.getEmployerShifts(),
-        initialData: const [], // ✅ prevents endless spinner if stream is empty
+        initialData: const [],
         builder: (context, snap) {
           if (snap.hasError) {
             return Center(
@@ -146,7 +145,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: _toggleFilter,
-                    child: Container(color: Colors.black.withOpacity(0.12)),
+                    child: Container(color: const Color.fromARGB(12, 0, 0, 0)),
                   ),
                 ),
               if (_showFilter)
@@ -395,7 +394,7 @@ class _BookingCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE6E8EE)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: const Color.fromARGB(5, 0, 0, 0),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),
@@ -629,7 +628,7 @@ class _FilterPanel extends StatelessWidget {
           border: Border.all(color: const Color(0xFFE6E8EE)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.18),
+              color: const Color.fromARGB(18, 0, 0, 0),
               blurRadius: 24,
               offset: const Offset(0, 12),
             ),
@@ -791,7 +790,7 @@ class _FilterRange extends StatelessWidget {
               activeTrackColor: primary,
               inactiveTrackColor: const Color(0xFFE6E8EE),
               thumbColor: primary,
-              overlayColor: primary.withOpacity(0.15),
+              overlayColor: primary.withValues(alpha:0.15),
               rangeThumbShape: const RoundRangeSliderThumbShape(
                 enabledThumbRadius: 9,
               ),

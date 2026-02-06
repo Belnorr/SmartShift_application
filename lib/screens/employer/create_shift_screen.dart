@@ -27,14 +27,13 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
 
   final ScrollController _thumbCtrl = ScrollController();
 
-@override
-void dispose() {
-  _thumbCtrl.dispose();   // ✅ add this
-  title.dispose();
-  location.dispose();
-  super.dispose();
-}
-
+  @override
+  void dispose() {
+    _thumbCtrl.dispose();
+    title.dispose();
+    location.dispose();
+    super.dispose();
+  }
 
   final List<String> allSkills = const [
     'Retail',
@@ -64,95 +63,85 @@ void dispose() {
   ImageProvider? get thumbnail =>
       selectedThumbPath == null ? null : AssetImage(selectedThumbPath!);
 
-
   Future<void> _pickThumbnail() async {
-  final chosen = await showModalBottomSheet<String>(
-    context: context,
-    showDragHandle: true,
-    isScrollControlled: false,
-    builder: (ctx) {
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Choose a thumbnail",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 12),
-
-              // ✅ Horizontal scroller area (gesture forced)
-              SizedBox(
-                height: 110,
-                child: Listener(
-                  // Optional: makes mouse wheel feel nicer on web/desktop
-                  onPointerSignal: (event) {
-                    if (event is PointerScrollEvent) {
-                      final next = (_thumbCtrl.offset + event.scrollDelta.dy)
-                          .clamp(0.0, _thumbCtrl.position.maxScrollExtent);
-                      _thumbCtrl.jumpTo(next);
-                    }
-                  },
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onHorizontalDragUpdate: (details) {
-                      // swipe right -> move list left, hence minus dx
-                      final next = (_thumbCtrl.offset - details.delta.dx)
-                          .clamp(0.0, _thumbCtrl.position.maxScrollExtent);
-                      _thumbCtrl.jumpTo(next);
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: false,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Choose a thumbnail",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 110,
+                  child: Listener(
+                    onPointerSignal: (event) {
+                      if (event is PointerScrollEvent) {
+                        final next = (_thumbCtrl.offset + event.scrollDelta.dy)
+                            .clamp(0.0, _thumbCtrl.position.maxScrollExtent);
+                        _thumbCtrl.jumpTo(next);
+                      }
                     },
-                    child: ListView.separated(
-                      controller: _thumbCtrl,
-                      scrollDirection: Axis.horizontal,
-
-                      // ✅ IMPORTANT: disable default drag so the sheet can't steal it
-                      physics: const NeverScrollableScrollPhysics(),
-
-                      itemCount: presetThumbs.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (_, i) {
-                        final path = presetThumbs[i];
-                        final isSelected = path == selectedThumbPath;
-
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () => Navigator.pop(ctx, path),
-                          child: Container(
-                            width: 110,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected
-                                    ? context.ss.primary
-                                    : const Color(0xFFE7E5EE),
-                                width: isSelected ? 2 : 1,
-                              ),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: Image.asset(path, fit: BoxFit.cover),
-                          ),
-                        );
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onHorizontalDragUpdate: (details) {
+                        final next = (_thumbCtrl.offset - details.delta.dx)
+                            .clamp(0.0, _thumbCtrl.position.maxScrollExtent);
+                        _thumbCtrl.jumpTo(next);
                       },
+                      child: ListView.separated(
+                        controller: _thumbCtrl,
+                        scrollDirection: Axis.horizontal,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: presetThumbs.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (_, i) {
+                          final path = presetThumbs[i];
+                          final isSelected = path == selectedThumbPath;
+
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => Navigator.pop(ctx, path),
+                            child: Container(
+                              width: 110,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? context.ss.primary
+                                      : const Color(0xFFE7E5EE),
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: Image.asset(path, fit: BoxFit.cover),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 10),
-            ],
+                const SizedBox(height: 10),
+              ],
+            ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
 
-  if (!mounted) return;
-  if (chosen != null) setState(() => selectedThumbPath = chosen);
-}
-
+    if (!mounted) return;
+    if (chosen != null) setState(() => selectedThumbPath = chosen);
+  }
 
   Future<void> _createShift() async {
     final t = title.text.trim();
@@ -511,7 +500,7 @@ void dispose() {
                 activeTrackColor: ss.primary,
                 inactiveTrackColor: const Color(0xFFE7E5EE),
                 thumbColor: ss.primary,
-                overlayColor: ss.primary.withOpacity(0.15),
+                overlayColor: ss.primary.withValues(alpha:0.15),
               ),
               child: Slider(
                 value: urgency,
@@ -554,10 +543,7 @@ void dispose() {
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 22),
-
-                // Increase + Decrease stacked
                 SizedBox(
                   width: 140,
                   child: Column(
@@ -663,7 +649,7 @@ class _Card extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE7E5EE)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha:0.04),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),

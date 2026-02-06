@@ -42,7 +42,8 @@ class AppTheme extends InheritedWidget {
         surface: Color(0xFFF7F7FB),
         text: Color.fromARGB(255, 12, 12, 26),
         muted: Color(0xFF6B7280),
-        primarySoft: Color.fromARGB(31, 92, 129, 231), // ~12% opacity of primary
+        primarySoft:
+            Color.fromARGB(31, 92, 129, 231), // ~12% opacity of primary
       );
     }
     return theme.data;

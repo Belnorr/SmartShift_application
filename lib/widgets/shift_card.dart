@@ -62,7 +62,7 @@ class ShiftCard extends StatelessWidget {
     }
 
     double progressValue(int booked, int total) {
-      if (total <= 0) return 0.0; // avoid division-by-zero
+      if (total <= 0) return 0.0;
       final v = booked / total;
       if (v.isNaN || v.isInfinite) return 0.0;
       return v.clamp(0.0, 1.0);
@@ -192,7 +192,7 @@ class ShiftCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: c.withOpacity(0.12),
+        color: c.withValues(alpha:0.12),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: const Color(0xFFE7E5EE)),
       ),

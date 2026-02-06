@@ -12,23 +12,19 @@ class FirestoreService {
   final _db = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
-  CollectionReference<Map<String, dynamic>> get _shifts => _db.collection('shifts');
-  CollectionReference<Map<String, dynamic>> get _usersCol => _db.collection('users');
+  CollectionReference<Map<String, dynamic>> get _shifts =>
+      _db.collection('shifts');
+  CollectionReference<Map<String, dynamic>> get _usersCol =>
+      _db.collection('users');
 
   // -------------------- SHIFTS --------------------
 
   Stream<List<Shift>> getAllShifts({bool onlyWithVacancy = false}) {
-    // If you want "open" shifts to show too, include it in UI filtering
-    // (Firestore can't do OR easily without extra setup)
     final q = _shifts.orderBy('date');
-
     return q.snapshots().map((snap) {
       final list = snap.docs.map(Shift.fromFirestore).toList();
-
-      // If you still want to hide non-open/ongoing here:
       final visible = list.where((s) =>
           s.status == ShiftStatus.open || s.status == ShiftStatus.ongoing);
-
       final result = visible.toList();
       if (!onlyWithVacancy) return result;
       return result.where((s) => s.slotsBooked < s.slotsTotal).toList();
@@ -46,7 +42,6 @@ class FirestoreService {
     });
   }
 
-  /// Create shift using your CreateShiftScreen inputs
   Future<void> createShift({
     required String title,
     required String location,
@@ -62,16 +57,14 @@ class FirestoreService {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception("Not logged in");
 
-    // Get employer/company name (optional but recommended)
     final udoc = await _usersCol.doc(uid).get();
     final employerName = (udoc.data()?['name'] as String?) ?? 'Employer';
 
-    // Auto-numbering (optional): If you don't have counters yet, this will start at 3001.
     final shiftNo = await _nextShiftNo();
     final shiftCode = "S$shiftNo";
 
     final shift = Shift(
-      id: '', // Firestore will generate doc id
+      id: '',
       shiftNo: shiftNo,
       shiftCode: shiftCode,
       title: title,
@@ -81,7 +74,7 @@ class FirestoreService {
       date: date,
       start: start,
       end: end,
-      hourlyRate: 0, // you can wire this later if you add a field
+      hourlyRate: 0,
       urgency: urgency,
       points: points,
       skills: skills,
@@ -91,7 +84,7 @@ class FirestoreService {
       thumbnailPath: thumbnailPath,
     );
 
-    final ref = _shifts.doc(); // random doc id
+    final ref = _shifts.doc();
     await ref.set({
       ...shift.toFirestoreMap(),
       'createdAt': FieldValue.serverTimestamp(),
@@ -111,7 +104,6 @@ class FirestoreService {
   }
 
   // -------------------- AUTO NUMBERING --------------------
-  // Uses: /counters/shifts { nextNo: 3001 }
   Future<int> _nextShiftNo() async {
     final ref = _db.collection('counters').doc('shifts');
 

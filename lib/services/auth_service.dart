@@ -10,7 +10,6 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// LOGIN + ROLE FETCH
   Future<UserRole> login({
     required String email,
     required String password,
@@ -35,12 +34,10 @@ class AuthService {
     throw Exception("Invalid role");
   }
 
-  /// FORGOT PASSWORD (already used by your UI)
   Future<void> resetPassword({required String email}) async {
     await _auth.sendPasswordResetEmail(email: email);
   }
 
-  /// LOGOUT
   Future<void> logout() async {
     await _auth.signOut();
   }

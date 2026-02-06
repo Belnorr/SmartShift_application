@@ -9,11 +9,11 @@ class GoogleSignInService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// Updated to accept an optional role (defaults to 'worker')
   Future<UserCredential?> signInWithGoogle({String role = 'worker'}) async {
     try {
       final googleProvider = GoogleAuthProvider();
-      final UserCredential userCred = await _auth.signInWithPopup(googleProvider);
+      final UserCredential userCred =
+          await _auth.signInWithPopup(googleProvider);
 
       final user = userCred.user;
       if (user == null) return null;
@@ -25,7 +25,7 @@ class GoogleSignInService {
         await userRef.set({
           'name': user.displayName ?? 'New User',
           'email': user.email,
-          'role': role, // Now uses the role passed from the UI
+          'role': role,
           'points': 0,
           'reliability': 100,
           'createdAt': FieldValue.serverTimestamp(),

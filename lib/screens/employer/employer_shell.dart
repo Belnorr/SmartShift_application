@@ -41,7 +41,7 @@ class _EmployerShellState extends State<EmployerShell> {
   Widget build(BuildContext context) {
     final ss = context.ss;
     final state = GoRouterState.of(context);
-    final path = state.uri.path; 
+    final path = state.uri.path;
     final idx = _indexFromPath(path);
 
     return Scaffold(
@@ -117,7 +117,8 @@ class _PillBottomNav extends StatelessWidget {
       );
     }
 
-    Widget plusButton({required bool selected, required VoidCallback onPressed}) {
+    Widget plusButton(
+        {required bool selected, required VoidCallback onPressed}) {
       return GestureDetector(
         onTap: onPressed,
         child: Container(
@@ -129,7 +130,7 @@ class _PillBottomNav extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE7E5EE)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha:0.06),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),

@@ -36,7 +36,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> submit() async {
     setState(() => loading = true);
     try {
-      await auth.resetPassword(email: email.text.trim()); // implement in AuthService
+      await auth.resetPassword(email: email.text.trim());
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,14 +64,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: Column(
           children: [
             const SizedBox(height: 18),
-
             Container(
               height: 50,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: const Color.fromARGB(255, 255, 255, 255),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: const Color.fromARGB(255, 157, 168, 190)),
+                border:
+                    Border.all(color: const Color.fromARGB(255, 157, 168, 190)),
               ),
               child: Row(
                 children: [
@@ -91,9 +91,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 10),
-
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
@@ -110,9 +108,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 8),
-
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -133,13 +129,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
-
             const Text("or", style: TextStyle(fontWeight: FontWeight.w800)),
-
-            const SizedBox(height: 12,),
-
+            const SizedBox(
+              height: 12,
+            ),
             SizedBox(
               width: 400,
               height: 48,

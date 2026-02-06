@@ -13,10 +13,10 @@ class EmployerEditShiftScreen extends StatefulWidget {
 }
 
 class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
-  // Controllers (match screenshot fields)
-  late final TextEditingController roleCtrl; // "Role"
-  late final TextEditingController locationCtrl; // "Location"
-  late final TextEditingController storeCtrl; // "Store / Event Name"
+  // Controllers
+  late final TextEditingController roleCtrl;
+  late final TextEditingController locationCtrl;
+  late final TextEditingController storeCtrl;
 
   final List<String> presetThumbs = const [
     "assets/img/starbucks.jpg",
@@ -45,35 +45,36 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
-  height: 110, // controls thumbnail size + sheet height
-  child: ListView.separated(
-    scrollDirection: Axis.horizontal,
-    itemCount: presetThumbs.length,
-    separatorBuilder: (_, __) => const SizedBox(width: 10),
-    itemBuilder: (context, i) {
-      final path = presetThumbs[i];
-      final isSelected = path == selectedThumbPath;
+                  height: 110, // thumbnail size + sheet height
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: presetThumbs.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, i) {
+                      final path = presetThumbs[i];
+                      final isSelected = path == selectedThumbPath;
 
-      return InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.pop(context, path),
-        child: Container(
-          width: 110,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected ? context.ss.primary : const Color(0xFFE7E5EE),
-              width: isSelected ? 2 : 1,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Image.asset(path, fit: BoxFit.cover),
-        ),
-      );
-    },
-  ),
-),
-
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () => Navigator.pop(context, path),
+                        child: Container(
+                          width: 110,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected
+                                  ? context.ss.primary
+                                  : const Color(0xFFE7E5EE),
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Image.asset(path, fit: BoxFit.cover),
+                        ),
+                      );
+                    },
+                  ),
+                ),
                 const SizedBox(height: 10),
               ],
             ),
@@ -107,7 +108,6 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
     'Usher',
   ];
 
-  // time options (30-min steps)
   late final List<TimeOfDay> timeOptions;
 
   @override
@@ -116,17 +116,14 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
 
     final s = widget.shift;
 
-    // build dropdown options first
     timeOptions = _buildTimeOptions(stepMinutes: 30);
 
     roleCtrl = TextEditingController(text: s.title);
     locationCtrl = TextEditingController(text: s.location);
-    storeCtrl = TextEditingController(
-        text: s.shiftCode); // or whatever you want to show here
+    storeCtrl = TextEditingController(text: s.shiftCode);
 
     selectedDate = s.date;
 
-    // ✅ snap to dropdown values so DropdownButton doesn't crash
     start = _snapToOptions(s.start, timeOptions);
     end = _snapToOptions(s.end, timeOptions);
 
@@ -220,7 +217,6 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
                       } else {
                         temp.remove(s);
                       }
-                      // force rebuild bottom sheet
                       (ctx as Element).markNeedsBuild();
                     },
                   );
@@ -266,9 +262,6 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
       return;
     }
 
-    // Map back:
-    // shift.title = Role
-    // shift.employer = Store/Event
     final updated = widget.shift.copyWith(
       title: role,
       location: loc,
@@ -336,7 +329,7 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
           children: [
-            // Change Thumbnail pill
+            // change Thumbnail
             _PillButton(
               label: selectedThumbPath == null
                   ? "Change Thumbnail"

@@ -7,7 +7,6 @@ import 'edit_shift_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
-
 class EmployerManageShiftsScreen extends StatefulWidget {
   const EmployerManageShiftsScreen({super.key});
 
@@ -53,13 +52,11 @@ class _EmployerManageShiftsScreenState
         content: Text("This will delete ${shift.shiftCode} (${shift.title})."),
         actions: [
           TextButton(
-            onPressed: () =>
-                Navigator.of(dialogCtx).pop(false), // ✅ use dialogCtx
+            onPressed: () => Navigator.of(dialogCtx).pop(false),
             child: const Text("Cancel"),
           ),
           TextButton(
-            onPressed: () =>
-                Navigator.of(dialogCtx).pop(true), // ✅ use dialogCtx
+            onPressed: () => Navigator.of(dialogCtx).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text("Delete"),
           ),
@@ -88,12 +85,11 @@ class _EmployerManageShiftsScreenState
   }
 
   void _openEdit(Shift shift) {
-  Future.microtask(() {
-    if (!mounted) return;
-    context.push('/e/edit', extra: shift);
-  });
-}
-
+    Future.microtask(() {
+      if (!mounted) return;
+      context.push('/e/edit', extra: shift);
+    });
+  }
 
   void _showCardMenu({
     required TapDownDetails details,
@@ -142,7 +138,7 @@ class _EmployerManageShiftsScreenState
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               if (context.mounted) {
-                context.go('/'); // <- IMPORTANT
+                context.go('/');
               }
             },
           ),
@@ -186,17 +182,13 @@ class _EmployerManageShiftsScreenState
                 ),
               ],
             ),
-
             const SizedBox(height: 10),
             _SegmentedPills(
               index: seg,
               labels: const ["ongoing", "completed"],
               onChanged: (i) => setState(() => seg = i),
             ),
-
             const SizedBox(height: 12),
-
-            // List
             Expanded(
               child: StreamBuilder<List<Shift>>(
                 stream: db.getEmployerShifts(),

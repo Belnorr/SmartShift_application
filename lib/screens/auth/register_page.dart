@@ -34,7 +34,6 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  /// Manual Email/Password Registration (your logic kept, with confirm check)
   Future<void> _register() async {
     final name = _nameCtrl.text.trim();
     final email = _emailCtrl.text.trim();
@@ -78,13 +77,10 @@ class _RegisterPageState extends State<RegisterPage> {
         'savedShifts': [],
       });
       if (_rememberMe) {
-  await RememberMeStore.instance.upsertEmail(email);
-}
-
+        await RememberMeStore.instance.upsertEmail(email);
+      }
 
       debugPrint("FIRESTORE OK wrote users/${cred.user!.uid}");
-
-      // RootGate catches auth change
     } on FirebaseAuthException catch (e) {
       setState(() => _error = e.message ?? 'Registration failed');
     } on FirebaseException catch (e) {
@@ -96,7 +92,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  /// Google Registration logic (kept)
   Future<void> _registerWithGoogle() async {
     setState(() {
       _loading = true;
@@ -132,7 +127,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Image.asset(bgPath, fit: BoxFit.cover),
           ),
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.45)),
+            child: Container(color: Colors.black.withValues(alpha:0.45)),
           ),
           SafeArea(
             child: Column(
@@ -188,7 +183,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             onRight: () {},
                           ),
                           const SizedBox(height: 14),
-
                           _CapsuleField(
                             controller: _nameCtrl,
                             hint: "Name",
@@ -196,7 +190,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             enabled: !_loading,
                           ),
                           const SizedBox(height: 12),
-
                           _CapsuleField(
                             controller: _emailCtrl,
                             hint: "E-mail ID",
@@ -205,7 +198,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             enabled: !_loading,
                           ),
                           const SizedBox(height: 12),
-
                           _CapsuleField(
                             controller: _passCtrl,
                             hint: "Password",
@@ -214,7 +206,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             enabled: !_loading,
                           ),
                           const SizedBox(height: 12),
-
                           _CapsuleField(
                             controller: _confirmCtrl,
                             hint: "Confirm Password",
@@ -223,7 +214,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             enabled: !_loading,
                           ),
                           const SizedBox(height: 10),
-
                           Row(
                             children: [
                               _TinyCheck(
@@ -246,8 +236,6 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             ],
                           ),
-
-                          // Role toggle (keeps your _role logic, but matches cleaner UI)
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 10),
@@ -279,7 +267,6 @@ class _RegisterPageState extends State<RegisterPage> {
                               ],
                             ),
                           ),
-
                           if (_error.isNotEmpty) ...[
                             const SizedBox(height: 10),
                             Text(
@@ -291,25 +278,20 @@ class _RegisterPageState extends State<RegisterPage> {
                               textAlign: TextAlign.center,
                             ),
                           ],
-
                           const SizedBox(height: 12),
-
                           _PrimaryButton(
                             label: "Create Account",
                             loading: _loading,
                             onPressed: _register,
                           ),
-
                           const SizedBox(height: 12),
                           _DividerOr(),
                           const SizedBox(height: 12),
-
                           _GoogleButton(
                             loading: _loading,
                             onPressed: _registerWithGoogle,
                             label: "Google",
                           ),
-
                           const SizedBox(height: 10),
                         ],
                       ),
@@ -325,7 +307,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 }
 
-/// ---------- UI pieces (same as login) ----------
+/// ---------- UI pieces ----------
 
 class _AuthSegmentedTabs extends StatelessWidget {
   final String leftLabel;
