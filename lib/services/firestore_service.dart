@@ -53,6 +53,7 @@ class FirestoreService {
     required List<String> skills,
     required int slotsTotal,
     String? thumbnailPath,
+    required int payPerHour,
   }) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception("Not logged in");
@@ -74,7 +75,7 @@ class FirestoreService {
       date: date,
       start: start,
       end: end,
-      hourlyRate: 0,
+      hourlyRate: payPerHour,
       urgency: urgency,
       points: points,
       skills: skills,
