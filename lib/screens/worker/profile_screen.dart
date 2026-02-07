@@ -46,7 +46,6 @@ class ProfilePage extends StatelessWidget {
                 const SizedBox(height: 20),
                 _SkillsSection(skills: List.from(data['skills'] ?? [])),
 
-                // LOGOUT BUTTON — LINE ~68
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,

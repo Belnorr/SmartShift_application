@@ -45,7 +45,7 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
-                  height: 110, // thumbnail size + sheet height
+                  height: 110, 
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: presetThumbs.length,

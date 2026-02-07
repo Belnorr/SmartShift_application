@@ -5,15 +5,13 @@ import 'package:flutter/material.dart';
 enum ShiftStatus { open, ongoing, completed, cancelled, noshow }
 
 class Shift {
-  /// Firestore document id (random)
   final String id;
 
-  /// Your human-readable shift number/code (e.g., 3001 / S3001)
   final int shiftNo;
   final String shiftCode;
 
   final String title;
-  final String employer;     // Firestore: company
+  final String employer;     // company
   final String employerId;
 
   final String location;
@@ -22,17 +20,17 @@ class Shift {
   final TimeOfDay start;
   final TimeOfDay end;
 
-  final int hourlyRate;      // Firestore: payPerHour
-  final int urgency;         // Firestore: urgency
-  final int points;          // Firestore: rewardPoints
+  final int hourlyRate;      // payPerHour
+  final int urgency;         // urgency
+  final int points;          // rewardPoints
 
-  final List<String> skills; // Firestore: requiredSkills
+  final List<String> skills; // requiredSkills
 
-  final int slotsTotal;      // Firestore: capacity
-  final int slotsBooked;     // Firestore: bookedCount
+  final int slotsTotal;      // capacity
+  final int slotsBooked;     // bookedCount
 
-  final ShiftStatus status;  // Firestore: status
-  final String? thumbnailPath; // Firestore: imageURL (asset path or url)
+  final ShiftStatus status;  // status
+  final String? thumbnailPath; // imageURL (asset path or url)
 
   const Shift({
     required this.id,
@@ -82,9 +80,7 @@ class Shift {
     return DateTime.now();
   }
 
-  /// ✅ Use this everywhere for Firestore writes (matches your DB fields)
   Map<String, dynamic> toFirestoreMap() {
-    // Store endTime as a Timestamp (today’s date + time)
     final endDt = DateTime(date.year, date.month, date.day, end.hour, end.minute);
 
     return {
@@ -107,7 +103,6 @@ class Shift {
     };
   }
 
-  /// ✅ Reader for your Firestore schema
   static Shift fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data() ?? {};
 

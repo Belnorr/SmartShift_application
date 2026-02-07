@@ -143,7 +143,6 @@ class FirestoreService {
         'slotsBooked': newBooked,
         'status': newBooked >= slotsTotal ? 'booked' : 'open',
         'updatedAt': FieldValue.serverTimestamp(),
-        // optional but helpful for tracking
         'bookedBy': FieldValue.arrayUnion([uid]),
       });
 

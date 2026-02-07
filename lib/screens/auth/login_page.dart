@@ -123,11 +123,9 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: const Color(0xFFF3F4F6),
       body: Stack(
         children: [
-          // background
           Positioned.fill(
             child: Image.asset(bgPath, fit: BoxFit.cover),
           ),
-          // dark tint
           Positioned.fill(
             child: Container(color: Colors.black.withValues(alpha:0.45)),
           ),
@@ -212,7 +210,7 @@ class _LoginPageState extends State<LoginPage> {
                                   onSelected: (s) {
                                     _emailCtrl.text = s.email;
                                     _passCtrl
-                                        .clear(); // don't autofill password
+                                        .clear(); 
                                   },
                                   fieldViewBuilder: (context, textCtrl,
                                       focusNode, onFieldSubmitted) {

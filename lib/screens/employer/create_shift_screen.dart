@@ -18,7 +18,7 @@ class CreateShiftScreen extends StatefulWidget {
 class _CreateShiftScreenState extends State<CreateShiftScreen> {
   final title = TextEditingController();
   final location = TextEditingController();
-  final payCtrl = TextEditingController(text: '12'); // default
+  final payCtrl = TextEditingController(text: '12'); 
   final ScrollController _thumbCtrl = ScrollController();
 
   DateTime selectedDate = DateTime.now().add(const Duration(days: 2));
