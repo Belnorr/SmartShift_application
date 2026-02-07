@@ -117,7 +117,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    const bgPath = "assets/img/auth_bg.png";
+    const bgPath = "assets/auth_bg.png";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F4F6),

@@ -18,17 +18,17 @@ class CreateShiftScreen extends StatefulWidget {
 class _CreateShiftScreenState extends State<CreateShiftScreen> {
   final title = TextEditingController();
   final location = TextEditingController();
+  final payCtrl = TextEditingController(text: '12'); // default
+  final ScrollController _thumbCtrl = ScrollController();
 
   DateTime selectedDate = DateTime.now().add(const Duration(days: 2));
   TimeOfDay start = const TimeOfDay(hour: 10, minute: 0);
   TimeOfDay end = const TimeOfDay(hour: 17, minute: 0);
 
   double urgency = 3;
-
-  final ScrollController _thumbCtrl = ScrollController();
-
   @override
   void dispose() {
+    payCtrl.dispose();
     _thumbCtrl.dispose();
     title.dispose();
     location.dispose();
@@ -50,13 +50,13 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
   int slotsTotal = 3;
 
   final List<String> presetThumbs = const [
-    "assets/img/starbucks.jpg",
-    "assets/img/muji.jpg",
-    "assets/img/light_to_night.jpg",
-    "assets/img/bread_talk.jpg",
-    "assets/img/chateraise.jpg",
-    "assets/img/uniqlo.jpg",
-    "assets/img/yakun.jpg",
+    "assets/starbucks.jpg",
+    "assets/muji.jpg",
+    "assets/light_to_night.jpg",
+    "assets/bread_talk.jpg",
+    "assets/chateraise.jpg",
+    "assets/uniqlo.jpg",
+    "assets/yakun.jpg",
   ];
 
   String? selectedThumbPath;
@@ -154,6 +154,16 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
       return;
     }
 
+    final pay = int.tryParse(payCtrl.text.trim()) ?? 0;
+
+if (pay <= 0) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Please enter a valid pay per hour (> 0)")),
+  );
+  return;
+}
+
+
     try {
       await FirestoreService.instance.createShift(
         title: t,
@@ -166,6 +176,7 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
         skills: skills.toList(),
         slotsTotal: slotsTotal,
         thumbnailPath: selectedThumbPath,
+        payPerHour: pay,
       );
 
       if (!mounted) return;
@@ -364,6 +375,14 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
               ],
             ),
 
+            const SizedBox(height: 10),
+            _CapsuleField(
+              label: 'Pay per hour (\$/h)',
+              controller: payCtrl,
+              icon: Icons.attach_money,
+              keyboardType: TextInputType.number,
+            ),
+
             const SizedBox(height: 16),
             Text(
               'Required Skills',
@@ -500,7 +519,7 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
                 activeTrackColor: ss.primary,
                 inactiveTrackColor: const Color(0xFFE7E5EE),
                 thumbColor: ss.primary,
-                overlayColor: ss.primary.withValues(alpha:0.15),
+                overlayColor: ss.primary.withValues(alpha: 0.15),
               ),
               child: Slider(
                 value: urgency,
@@ -649,7 +668,7 @@ class _Card extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE7E5EE)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),

@@ -17,6 +17,11 @@ class FirestoreService {
   CollectionReference<Map<String, dynamic>> get _usersCol =>
       _db.collection('users');
 
+  String get uid => _auth.currentUser!.uid;
+
+  DocumentReference<Map<String, dynamic>> get currentUserRef =>
+      _usersCol.doc(uid);
+
   // -------------------- SHIFTS --------------------
 
   Stream<List<Shift>> getAllShifts({bool onlyWithVacancy = false}) {
@@ -42,6 +47,19 @@ class FirestoreService {
     });
   }
 
+  Stream<List<Shift>> getOpenShifts() {
+    return _shifts
+        .where('status', isEqualTo: 'open')
+        .orderBy('date')
+        .snapshots()
+        .map((snap) => snap.docs.map(Shift.fromFirestore).toList());
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> openShiftsStream() {
+    return _shifts.where('status', isEqualTo: 'open').snapshots();
+  }
+
+
   Future<void> createShift({
     required String title,
     required String location,
@@ -53,6 +71,7 @@ class FirestoreService {
     required List<String> skills,
     required int slotsTotal,
     String? thumbnailPath,
+    required int payPerHour,
   }) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception("Not logged in");
@@ -74,7 +93,7 @@ class FirestoreService {
       date: date,
       start: start,
       end: end,
-      hourlyRate: 0,
+      hourlyRate: payPerHour,
       urgency: urgency,
       points: points,
       skills: skills,
@@ -103,6 +122,42 @@ class FirestoreService {
     });
   }
 
+  Future<void> bookShift({required String shiftId}) async {
+    final shiftRef = _shifts.doc(shiftId);
+
+    await _db.runTransaction((tx) async {
+      final shiftSnap = await tx.get(shiftRef);
+      if (!shiftSnap.exists) throw Exception('Shift not found');
+
+      final data = shiftSnap.data() ?? <String, dynamic>{};
+
+      final int slotsBooked = (data['slotsBooked'] as num?)?.toInt() ?? 0;
+      final int slotsTotal = (data['slotsTotal'] as num?)?.toInt() ?? 0;
+
+      if (slotsTotal <= 0) throw Exception('Invalid shift capacity');
+      if (slotsBooked >= slotsTotal) throw Exception('Shift is full');
+
+      final int newBooked = slotsBooked + 1;
+
+      tx.update(shiftRef, {
+        'slotsBooked': newBooked,
+        'status': newBooked >= slotsTotal ? 'booked' : 'open',
+        'updatedAt': FieldValue.serverTimestamp(),
+        // optional but helpful for tracking
+        'bookedBy': FieldValue.arrayUnion([uid]),
+      });
+
+      tx.set(
+        currentUserRef,
+        {
+          'bookedShifts': FieldValue.arrayUnion([shiftId]),
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    });
+  }
+
   // -------------------- AUTO NUMBERING --------------------
   Future<int> _nextShiftNo() async {
     final ref = _db.collection('counters').doc('shifts');
@@ -115,7 +170,7 @@ class FirestoreService {
     });
   }
 
-  // -------------------- USERS (unchanged) --------------------
+  // -------------------- USERS --------------------
 
   Future<UserProfile> getUser({required String uid}) async {
     final doc = await _usersCol.doc(uid).get();

@@ -114,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    const bgPath = "assets/img/auth_bg.png";
+    const bgPath = "assets/auth_bg.png";
 
 
     const sheetRadius = 28.0;

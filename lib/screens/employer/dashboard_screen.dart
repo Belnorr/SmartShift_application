@@ -184,14 +184,14 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
   String _thumbForEmployer(String employer) {
     final e = employer.toLowerCase();
-    if (e.contains("starbucks")) return "assets/img/starbucks.jpg";
-    if (e.contains("muji")) return "assets/img/muji.jpg";
-    if (e.contains("light")) return "assets/img/light_to_night.jpg";
-    if (e.contains("yakun")) return "assets/img/yakun.jpg";
-    if (e.contains("uniqlo")) return "assets/img/uniqlo.jpg";
-    if (e.contains("chateraise")) return "assets/img/chateraise.jpg";
-    if (e.contains("bread")) return "assets/img/break_talk.jpg";
-    return "assets/img/auth_bg.png";
+    if (e.contains("starbucks")) return "assets/starbucks.jpg";
+    if (e.contains("muji")) return "assets/muji.jpg";
+    if (e.contains("light")) return "assets/light_to_night.jpg";
+    if (e.contains("yakun")) return "assets/yakun.jpg";
+    if (e.contains("uniqlo")) return "assets/uniqlo.jpg";
+    if (e.contains("chateraise")) return "assets/chateraise.jpg";
+    if (e.contains("bread")) return "assets/break_talk.jpg";
+    return "assets/auth_bg.png";
   }
 }
 

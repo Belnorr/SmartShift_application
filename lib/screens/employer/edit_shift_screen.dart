@@ -19,9 +19,9 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
   late final TextEditingController storeCtrl;
 
   final List<String> presetThumbs = const [
-    "assets/img/starbucks.jpg",
-    "assets/img/muji.jpg",
-    "assets/img/light_to_night.jpg",
+    "assets/starbucks.jpg",
+    "assets/muji.jpg",
+    "assets/light_to_night.jpg",
   ];
 
   ImageProvider? get thumbnail =>
