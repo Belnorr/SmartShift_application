@@ -9,14 +9,18 @@ class GoogleSignInService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Future<UserCredential?> signInWithGoogle({String role = 'worker'}) async {
+  Future<UserCredential> signInWithGoogle({String role = 'worker'}) async {
     try {
       final googleProvider = GoogleAuthProvider();
+
+      // WEB: popup (your current approach)
       final UserCredential userCred =
           await _auth.signInWithPopup(googleProvider);
 
       final user = userCred.user;
-      if (user == null) return null;
+      if (user == null) {
+        throw Exception('Google sign-in returned null user');
+      }
 
       final userRef = _db.collection('users').doc(user.uid);
       final snap = await userRef.get();
@@ -28,15 +32,18 @@ class GoogleSignInService {
           'role': role,
           'points': 0,
           'reliability': 100,
+          'skills': role == 'worker' ? ['Barista'] : [],
+          'stats': {'lateCancellations': 0, 'shiftsCompleted': 0},
           'createdAt': FieldValue.serverTimestamp(),
           'savedShifts': [],
         });
       }
 
       return userCred;
-    } catch (e) {
+    } catch (e, st) {
       debugPrint('Google Sign-In Error: $e');
-      return null;
+      debugPrint('$st');
+      rethrow; // IMPORTANT: don’t return null silently
     }
   }
 

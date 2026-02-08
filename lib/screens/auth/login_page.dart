@@ -82,19 +82,22 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _loginWithGoogle() async {
-    setState(() {
-      _loading = true;
-      _error = '';
-    });
+  setState(() {
+    _loading = true;
+    _error = '';
+  });
 
-    try {
-      await GoogleSignInService.instance.signInWithGoogle();
-    } catch (e) {
-      setState(() => _error = 'Google Sign-In failed');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+  try {
+    await GoogleSignInService.instance.signInWithGoogle();
+    if (!mounted) return;
+    Navigator.of(context).pop(); 
+  } catch (e) {
+    setState(() => _error = 'Google Sign-In failed: $e');
+  } finally {
+    if (mounted) setState(() => _loading = false);
   }
+}
+
 
   void _goRegister() {
     if (_loading) return;

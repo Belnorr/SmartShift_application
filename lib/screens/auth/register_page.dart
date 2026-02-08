@@ -93,19 +93,24 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _registerWithGoogle() async {
-    setState(() {
-      _loading = true;
-      _error = '';
-    });
+  setState(() {
+    _loading = true;
+    _error = '';
+  });
 
-    try {
-      await GoogleSignInService.instance.signInWithGoogle(role: _role);
-    } catch (e) {
-      setState(() => _error = 'Google registration failed');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+  try {
+    await GoogleSignInService.instance.signInWithGoogle(role: _role);
+
+    if (!mounted) return;
+
+    Navigator.of(context).pop(); 
+  } catch (e) {
+    setState(() => _error = 'Google registration failed: $e');
+  } finally {
+    if (mounted) setState(() => _loading = false);
   }
+}
+
 
   void _goLogin() {
     if (_loading) return;
