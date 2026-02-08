@@ -11,7 +11,7 @@ class Shift {
   final String shiftCode;
 
   final String title;
-  final String employer;     // company
+  final String employer;    
   final String employerId;
 
   final String location;

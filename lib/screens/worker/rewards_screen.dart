@@ -297,7 +297,6 @@ class _ActivityList extends StatelessWidget {
               pointsText = '-50 pts';
               positive = false;
             } else {
-              // booked / upcoming / pending
               title = 'Shift Booked';
               pointsText = '0 pts';
               positive = true;

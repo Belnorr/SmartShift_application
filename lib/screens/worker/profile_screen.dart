@@ -304,7 +304,7 @@ class _StreamSummaryCard extends StatelessWidget {
 
         return _SummaryCard(stats: {
           'shiftsCompleted': completed,
-          'lateCancellations': cancelled, // rename label if needed
+          'lateCancellations': cancelled,
         });
       },
     );

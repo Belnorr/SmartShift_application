@@ -4,7 +4,7 @@ import 'urgency_chip.dart';
 import 'points_chip.dart';
 import 'tag_chip.dart';
 
-class ShiftCard extends StatelessWidget {
+class DiscoverShiftCard extends StatelessWidget {
   final String title;
   final String company;
   final String location;
@@ -15,7 +15,7 @@ class ShiftCard extends StatelessWidget {
   final List<String> tags;
   final String imageUrl;
 
-  const ShiftCard({
+  const DiscoverShiftCard({
     super.key,
     required this.title,
     required this.company,

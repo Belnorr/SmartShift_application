@@ -214,7 +214,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                 ),
                               );
                             },
-                            child: ShiftCard(
+                            child: DiscoverShiftCard(
                               title: data['title'],
                               company: data['company'],
                               location: data['location'],
@@ -243,17 +243,16 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                   : Icons.bookmark_border,
                             ),
                           onPressed: () async {
-                            if (currentUid == null) return; // Handle unauthenticated state
+                            if (currentUid == null) return; 
 
                             final isCurrentlySaved = savedShifts.contains(id);
                             
-                            // 1. Optimistic UI update
+                            
                             setState(() {
                               isCurrentlySaved ? savedShifts.remove(id) : savedShifts.add(id);
                             });
 
-                            // 2. Persistent Update in Firestore
-                            // Assuming you have a 'users' collection where you store saved shift IDs
+                            
                             final userDoc = FirebaseFirestore.instance.collection('users').doc(currentUid);
 
                             if (isCurrentlySaved) {
@@ -263,7 +262,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             } else {
                               await userDoc.update({
                                 'savedShifts': FieldValue.arrayUnion([id])
-                              },); // Note: use set with merge:true if the doc might not exist
+                              },); 
                             }
                           }
                             
