@@ -8,7 +8,6 @@ class ShiftCompletionService {
 
     print('DEBUG: markCompletedShifts start userId=$userId now=${now.toDate()}');
 
-    // ✅ Fetch ALL booked shifts (avoid Firestore where() type/index issues)
     final query = await userRef.collection('bookedShifts').get();
 
     print('DEBUG: bookedShifts total docs=${query.docs.length}');
@@ -31,8 +30,6 @@ class ShiftCompletionService {
 
     for (final doc in query.docs) {
       final data = doc.data();
-
-      // ✅ ended-check MUST be inside loop (doc exists here)
       final endRaw = data['endTime'];
       final startRaw = data['date'];
 
@@ -50,7 +47,6 @@ class ShiftCompletionService {
         continue;
       }
 
-      // status gate
       final status = (data['status'] ?? '').toString().trim().toLowerCase();
       final allowed =
           status == 'upcoming' || status == 'booked' || status == 'completed';
@@ -60,7 +56,6 @@ class ShiftCompletionService {
         continue;
       }
 
-      // rewardAwarded gate (handles bool OR string)
       final ra = data['rewardAwarded'];
       final alreadyAwarded =
           ra == true || ra?.toString().toLowerCase() == 'true';
@@ -70,7 +65,6 @@ class ShiftCompletionService {
         continue;
       }
 
-      // rewardPoints parse (handles num OR string)
       final rp = data['rewardPoints'];
       final reward = rp is num
           ? rp.toInt()
@@ -80,14 +74,12 @@ class ShiftCompletionService {
         'DEBUG AWARD ${doc.id}: status=$status rewardPoints=$rp parsedReward=$reward',
       );
 
-      // update booked shift doc
       batch.update(doc.reference, {
         'status': 'completed',
         'completedAt': FieldValue.serverTimestamp(),
         'rewardAwarded': true,
       });
 
-      // ✅ one rewardHistory entry per shift
       final historyRef = userRef.collection('rewardHistory').doc();
       batch.set(historyRef, {
         'type': 'shift_complete',
@@ -109,7 +101,6 @@ class ShiftCompletionService {
       return;
     }
 
-    // update user totals
     batch.update(userRef, {
       'points': FieldValue.increment(totalEarned),
       'stats.shiftsCompleted': FieldValue.increment(newlyCompleted),

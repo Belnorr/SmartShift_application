@@ -331,7 +331,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-/// ---------- UI pieces ----------
+/// UI
 
 class _AuthSegmentedTabs extends StatelessWidget {
   final String leftLabel;

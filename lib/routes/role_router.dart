@@ -35,7 +35,7 @@ class RoleRouter extends StatelessWidget {
 
         if (role == 'worker') {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) context.go('/w/discover'); // adjust if needed
+            if (context.mounted) context.go('/w/discover'); 
           });
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),

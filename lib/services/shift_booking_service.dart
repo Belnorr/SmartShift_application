@@ -19,19 +19,14 @@ class ShiftBookingService {
       throw Exception('Shift already booked');
     }
 
-    // MUST be a Timestamp from your shift doc
     final Timestamp startTs = shiftData['date'] as Timestamp;
 
-    // Rebuild endTime to be same day as start, using endHour/endMinute if you have it.
-    // If shiftData already has a proper Timestamp endTime, use it.
     Timestamp endTs;
     final rawEnd = shiftData['endTime'];
 
     if (rawEnd is Timestamp) {
       endTs = rawEnd;
     } else {
-      // fallback: compute from dateLabel day + endHour/endMinute
-      // You NEED endHour/endMinute in shiftData for this branch.
       final endHour = shiftData['endHour'] as int;
       final endMinute = shiftData['endMinute'] as int;
 

@@ -572,7 +572,7 @@ class _EmployerEditShiftScreenState extends State<EmployerEditShiftScreen> {
   }
 }
 
-/// ---------- UI helpers ----------
+// UI
 
 class _Card extends StatelessWidget {
   final Widget child;

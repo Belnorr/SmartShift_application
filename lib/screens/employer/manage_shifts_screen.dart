@@ -240,7 +240,7 @@ class _EmployerManageShiftsScreenState
   }
 }
 
-/// --- UI widgets ---
+// UI
 
 class _IconPillButton extends StatelessWidget {
   final String label;

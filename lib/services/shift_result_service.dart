@@ -64,8 +64,6 @@ class ShiftResultService {
 
       final userData = userSnap.data()!;
       final shiftData = shiftSnap.data()!;
-
-      // prevent double reward
       if (shiftData['rewardAwarded'] == true) return;
       final int currentPoints = (userData['points'] as num?)?.toInt() ?? 0;
       final int reliability = (userData['reliability'] as num?)?.toInt() ?? 0;

@@ -13,7 +13,6 @@ class GoogleSignInService {
     try {
       final googleProvider = GoogleAuthProvider();
 
-      // WEB: popup (your current approach)
       final UserCredential userCred =
           await _auth.signInWithPopup(googleProvider);
 
@@ -43,7 +42,7 @@ class GoogleSignInService {
     } catch (e, st) {
       debugPrint('Google Sign-In Error: $e');
       debugPrint('$st');
-      rethrow; // IMPORTANT: don’t return null silently
+      rethrow; 
     }
   }
 

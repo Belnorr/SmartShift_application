@@ -22,7 +22,7 @@ class FirestoreService {
   DocumentReference<Map<String, dynamic>> get currentUserRef =>
       _usersCol.doc(uid);
 
-  // -------------------- SHIFTS --------------------
+  // SHIFTS 
 
   Stream<List<Shift>> getAllShifts({bool onlyWithVacancy = false}) {
     final q = _shifts.orderBy('date');
@@ -157,7 +157,7 @@ class FirestoreService {
     });
   }
 
-  // -------------------- AUTO NUMBERING --------------------
+  // AUTO NUMBERING 
   Future<int> _nextShiftNo() async {
     final ref = _db.collection('counters').doc('shifts');
 
@@ -169,7 +169,7 @@ class FirestoreService {
     });
   }
 
-  // -------------------- USERS --------------------
+  // USERS 
 
   Future<UserProfile> getUser({required String uid}) async {
     final doc = await _usersCol.doc(uid).get();

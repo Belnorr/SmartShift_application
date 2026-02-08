@@ -312,7 +312,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 }
 
-/// ---------- UI pieces ----------
+// UI
 
 class _AuthSegmentedTabs extends StatelessWidget {
   final String leftLabel;
