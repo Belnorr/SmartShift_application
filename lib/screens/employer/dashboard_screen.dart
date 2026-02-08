@@ -186,7 +186,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     final e = employer.toLowerCase();
     if (e.contains("starbucks")) return "assets/starbucks.jpg";
     if (e.contains("muji")) return "assets/muji.jpg";
-    if (e.contains("light")) return "assets/light_to_night.jpg";
+    if (e.contains("light")) return "assets/lighttonight.jpg";
     if (e.contains("yakun")) return "assets/yakun.jpg";
     if (e.contains("uniqlo")) return "assets/uniqlo.jpg";
     if (e.contains("chateraise")) return "assets/chateraise.jpg";

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-import '/services/shift_manage_service.dart';
+import '/services/shift_completion_service.dart';
+import '/services/shift_result_service.dart';
 
 class MyShiftsPage extends StatefulWidget {
   const MyShiftsPage({super.key});
@@ -18,13 +18,17 @@ class _MyShiftsPageState extends State<MyShiftsPage>
 
   late final String uid;
 
+  @override
+void initState() {
+  super.initState();
+  _tabController = TabController(length: 3, vsync: this);
+  uid = FirebaseAuth.instance.currentUser!.uid;
+  
 
-      @override
-      void initState() {
-        super.initState();
-        _tabController = TabController(length: 3, vsync: this);
-        uid = FirebaseAuth.instance.currentUser!.uid;
-      }
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    await ShiftCompletionService.markCompletedShifts(uid);
+  });
+}
 
 
   Stream<QuerySnapshot> _getShifts(String status) {
@@ -60,22 +64,19 @@ class _MyShiftsPageState extends State<MyShiftsPage>
               ),
               child: TabBar(
                 controller: _tabController,
-              indicator: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              indicatorPadding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 6,
-              ),
-
+                indicator: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                indicatorPadding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 6,
+                ),
 
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: const Color(0xFF1F2437),
                 unselectedLabelColor: Colors.white70,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
+                labelStyle: const TextStyle(fontWeight: FontWeight.w600),
                 tabs: const [
                   Tab(text: 'Upcoming'),
                   Tab(text: 'Completed'),
@@ -147,8 +148,8 @@ class ShiftList extends StatelessWidget {
 
             final timeLabel = (startTs != null && endTs != null)
                 ? '${DateFormat('EEE, d MMM').format(startTs.toDate())} '
-                    '${DateFormat('HH:mm').format(startTs.toDate())}'
-                    ' - ${DateFormat('HH:mm').format(endTs.toDate())}'
+                      '${DateFormat('HH:mm').format(startTs.toDate())}'
+                      ' - ${DateFormat('HH:mm').format(endTs.toDate())}'
                 : '';
 
             return Container(
@@ -171,8 +172,9 @@ class ShiftList extends StatelessWidget {
                             Text(
                               data['title'],
                               style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -196,8 +198,11 @@ class ShiftList extends StatelessWidget {
 
                   Row(
                     children: [
-                      const Icon(Icons.location_on,
-                          size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -205,13 +210,13 @@ class ShiftList extends StatelessWidget {
                           style: const TextStyle(fontSize: 13),
                         ),
                       ),
-                      const Icon(Icons.access_time,
-                          size: 16, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(
-                        timeLabel,
-                        style: const TextStyle(fontSize: 13),
+                      const Icon(
+                        Icons.access_time,
+                        size: 16,
+                        color: Colors.grey,
                       ),
+                      const SizedBox(width: 4),
+                      Text(timeLabel, style: const TextStyle(fontSize: 13)),
                     ],
                   ),
 
@@ -221,19 +226,11 @@ class ShiftList extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _pill(
-                        'Urgency ${data['urgency']}/5',
-                        Colors.orange,
-                      ),
-                      _pill(
-                        '+${data['rewardPoints']} pts',
-                        Colors.blue,
-                      ),
+                      _pill('Urgency ${data['urgency']}/5', Colors.orange),
+                      _pill('+${data['rewardPoints']} pts', Colors.blue),
                       ...List<String>.from(
                         data['requiredSkills'] ?? [],
-                      ).map(
-                        (s) => _pill(s, Colors.grey),
-                      ),
+                      ).map((s) => _pill(s, Colors.grey)),
                     ],
                   ),
 
@@ -243,35 +240,38 @@ class ShiftList extends StatelessWidget {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: const Text('Cancel shift?'),
-                              content: const Text(
-                                'Cancelling will deduct 50 points and increase late cancellations.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('No'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, true),
-                                  child: const Text('Yes, cancel'),
-                                ),
-                              ],
-                            ),
-                          );
+  final confirm = await showDialog<bool>(
+    context: context,
+    barrierDismissible: true,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Cancel shift?'),
+      content: const Text(
+        'Cancelling will deduct 50 points and increase late cancellations.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('No'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: const Text('Yes, cancel'),
+        ),
+      ],
+    ),
+  );
 
-                          if (confirm != true) return;
+  if (confirm != true) return;
+  if (!context.mounted) return;
 
-                          await ShiftManageService.cancelShift(
-                            userId: userId!,
-                            shiftId: doc.id,
-                          );
-                        },
+  await ShiftResultService.cancelShift(
+  userId: userId!,
+  shiftDocId: doc.id, 
+);
+
+
+},
+
                         child: const Text(
                           'Cancel',
                           style: TextStyle(color: Colors.red),
@@ -295,10 +295,7 @@ class ShiftList extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color),
       ),
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 12, color: color),
-      ),
+      child: Text(text, style: TextStyle(fontSize: 12, color: color)),
     );
   }
 }

@@ -42,7 +42,7 @@ class ProfilePage extends StatelessWidget {
               children: [
                 _ProfileHeader(data: data),
                 const SizedBox(height: 20),
-                _SummaryCard(stats: data['stats'] ?? {}),
+                _StreamSummaryCard(userId: ProfilePage.uid),
                 const SizedBox(height: 20),
                 _SkillsSection(skills: List.from(data['skills'] ?? [])),
 
@@ -265,6 +265,52 @@ class _SummaryCard extends StatelessWidget {
     );
   }
 }
+class _StreamSummaryCard extends StatelessWidget {
+  final String userId;
+  const _StreamSummaryCard({required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    final bookedRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('bookedShifts');
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: bookedRef.snapshots(),
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F2937),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        int completed = 0;
+        int cancelled = 0;
+
+        for (final d in snap.data!.docs) {
+          final data = d.data() as Map<String, dynamic>;
+          final status = (data['status'] ?? '').toString().toLowerCase();
+
+          if (status == 'completed') completed++;
+          if (status == 'cancelled') cancelled++;
+        }
+
+        return _SummaryCard(stats: {
+          'shiftsCompleted': completed,
+          'lateCancellations': cancelled, // rename label if needed
+        });
+      },
+    );
+  }
+}
+
 
 class _SummaryRow extends StatelessWidget {
   final String label;

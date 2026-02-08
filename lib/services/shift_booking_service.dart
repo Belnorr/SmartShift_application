@@ -19,6 +19,28 @@ class ShiftBookingService {
       throw Exception('Shift already booked');
     }
 
+    // MUST be a Timestamp from your shift doc
+    final Timestamp startTs = shiftData['date'] as Timestamp;
+
+    // Rebuild endTime to be same day as start, using endHour/endMinute if you have it.
+    // If shiftData already has a proper Timestamp endTime, use it.
+    Timestamp endTs;
+    final rawEnd = shiftData['endTime'];
+
+    if (rawEnd is Timestamp) {
+      endTs = rawEnd;
+    } else {
+      // fallback: compute from dateLabel day + endHour/endMinute
+      // You NEED endHour/endMinute in shiftData for this branch.
+      final endHour = shiftData['endHour'] as int;
+      final endMinute = shiftData['endMinute'] as int;
+
+      final start = startTs.toDate();
+      final end = DateTime(start.year, start.month, start.day, endHour, endMinute);
+
+      endTs = Timestamp.fromDate(end);
+    }
+
     await bookedRef.set({
       'shiftId': shiftId,
       'title': shiftData['title'],
@@ -27,9 +49,10 @@ class ShiftBookingService {
       'payPerHour': shiftData['payPerHour'],
       'rewardPoints': shiftData['rewardPoints'],
       'urgency': shiftData['urgency'],
-      'date': shiftData['date'],
-      'endTime': shiftData['endTime'],
+      'date': startTs,
+      'endTime': endTs,
       'status': 'upcoming',
+      'rewardAwarded': false,
       'bookedAt': FieldValue.serverTimestamp(),
     });
   }
