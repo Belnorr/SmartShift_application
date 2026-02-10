@@ -52,7 +52,7 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
   final List<String> presetThumbs = const [
     "assets/starbucks.jpg",
     "assets/muji.jpg",
-    "assets/light_to_night.jpg",
+    "assets/lighttonight.jpg",
     "assets/bread_talk.jpg",
     "assets/chateraise.jpg",
     "assets/uniqlo.jpg",

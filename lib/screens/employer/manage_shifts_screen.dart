@@ -30,19 +30,35 @@ class _EmployerManageShiftsScreenState
     super.dispose();
   }
 
-  List<Shift> _applySearchAndSegment(List<Shift> all) {
-    final q = _search.text.trim().toLowerCase();
+  // helpers for search
+String _norm(String s) =>
+    s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
 
-    final bySeg = all.where((s) => seg == 0 ? _isOngoing(s) : !_isOngoing(s));
+String _digits(String s) =>
+    s.replaceAll(RegExp(r'[^0-9]'), '');
 
-    if (q.isEmpty) return bySeg.toList();
+// improved search
+List<Shift> _applySearchAndSegment(List<Shift> all) {
+  final qRaw = _search.text.trim();
+  final q = _norm(qRaw);
+  final qDigits = _digits(qRaw);
 
-    return bySeg.where((s) {
-      final id = s.id.toLowerCase();
-      final title = (s.title).toLowerCase();
-      return id.contains(q) || title.contains(q);
-    }).toList();
-  }
+  final bySeg = all.where((s) => seg == 0 ? _isOngoing(s) : !_isOngoing(s));
+  if (q.isEmpty) return bySeg.toList();
+
+  return bySeg.where((s) {
+    final id = _norm(s.id);
+    final code = _norm(s.shiftCode);         // "s3022"
+    final codeDigits = _digits(s.shiftCode); // "3022"
+    final title = _norm(s.title);
+
+    return id.contains(q) ||
+        code.contains(q) ||
+        title.contains(q) ||
+        (qDigits.isNotEmpty && codeDigits.contains(qDigits));
+  }).toList();
+}
+
 
   Future<void> _confirmDelete(Shift shift) async {
     final ok = await showDialog<bool>(
